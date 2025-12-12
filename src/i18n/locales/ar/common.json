@@ -1,0 +1,22 @@
+{
+  "brandName": "فالورا",
+  "tagline": "عِش بالقيمة",
+  "brandDescription": "علامة عقارية راقية تجمع بين القيمة والهوية",
+  "readMore": "اقرأ المزيد",
+  "learnMore": "تعرف أكثر",
+  "viewAll": "عرض الكل",
+  "exploreNow": "استكشف الآن",
+  "getInTouch": "تواصل معنا",
+  "submit": "إرسال",
+  "loading": "جاري التحميل...",
+  "error": "حدث خطأ",
+  "success": "تم بنجاح!",
+  "search": "بحث",
+  "searchPlaceholder": "ابحث عن المشاريع...",
+  "copyright": "جميع الحقوق محفوظة {{year}} فالورا للعقارات.",
+  "developedBy": "تم التطوير بواسطة",
+  "privacyPolicy": "سياسة الخصوصية",
+  "termsOfService": "شروط الخدمة",
+  "cookiePolicy": "سياسة الكوكيز",
+  "backToTop": "العودة للأعلى"
+}

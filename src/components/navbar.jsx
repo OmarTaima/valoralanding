@@ -1,0 +1,120 @@
+import React, { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { useTranslation } from "../i18n/hooks/useTranslation";
+import LanguageSwitcher from "../i18n/components/LanguageSwitcher";
+
+const Navbar = () => {
+  const { t } = useTranslation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { path: "/", label: t("navigation:home") },
+    { path: "/projects", label: t("navigation:projects") },
+    { path: "/contact", label: t("navigation:contact") },
+  ];
+
+  return (
+    <nav className="sticky top-0 z-50 w-full glass">
+      <div className="container mx-auto px-4 md:px-6 py-3">
+        <div className="flex items-center justify-between">
+          {/* Brand */}
+          <div className="flex items-center">
+            <Link
+              to="/"
+              className="flex items-center space-x-2 rtl:space-x-reverse"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-primary-500 rounded-lg">
+                <span className="text-white font-bold text-xl">V</span>
+              </div>
+
+              <div className="flex flex-col rtl:text-right">
+                <span className="text-2xl font-bold text-light-900 dark:text-dark-50 tracking-tight">
+                  {t("common:brandName")}
+                </span>
+                <span className="text-xs text-light-500 dark:text-dark-300 font-medium">
+                  {t("common:tagline")}
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                className={({ isActive }) =>
+                  `nav-link relative px-2 py-1 text-lg ${
+                    isActive ? "nav-link-active" : ""
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            <LanguageSwitcher className="btn-outline" />
+          </div>
+
+          {/* Mobile controls */}
+          <div className="flex md:hidden items-center gap-3">
+            <LanguageSwitcher className="btn-outline" />
+            <button
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((s) => !s)}
+              className="p-2 rounded-md hover:bg-light-100 dark:hover:bg-dark-700 transition"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu panel */}
+        {mobileOpen && (
+          <div className="md:hidden mt-3 space-y-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `block nav-link px-3 py-2 rounded ${
+                    isActive ? "nav-link-active" : ""
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;

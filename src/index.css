@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* RTL + Dark Mode Support */
+@variant dark (&:is(.dark *));
+@variant rtl (&:is([dir="rtl"] *));
+@variant ltr (&:is([dir="ltr"] *));
+
+@theme static {
+  /* ===========================
+     VALORA COLOR SYSTEM
+     =========================== */
+
+  /* --- Primary Brand --- */
+  --color-primary-50: #e6fff6;
+  --color-primary-100: #c8ffee;
+  --color-primary-200: #92ffdd;
+  --color-primary-300: #5ff5c8;
+  --color-primary-400: #30e9b6;
+  --color-primary-500: #1dd1a1; /* MAIN BRAND GREEN */
+  --color-primary-600: #14a57d;
+  --color-primary-700: #0f7b5d;
+  --color-primary-800: #0b5943;
+  --color-primary-900: #073c2d;
+
+  /* --- Secondary Deep Tone (Luxury) --- */
+  --color-secondary-50: #e7efed;
+  --color-secondary-100: #cfdcd9;
+  --color-secondary-200: #9eb9b3;
+  --color-secondary-300: #6c968d;
+  --color-secondary-400: #3b7367;
+  --color-secondary-500: #0b1f1a; /* Brand Deep Green/Black */
+  --color-secondary-600: #081815;
+  --color-secondary-700: #06110f;
+  --color-secondary-800: #040b0a;
+  --color-secondary-900: #020504;
+
+  /* --- Neutral / Backgrounds --- */
+  --color-light-50: #f7faf9;
+  --color-light-100: #eef3f2;
+  --color-light-200: #dce7e5;
+  --color-light-300: #c8d8d4;
+  --color-light-400: #a2b3ae;
+  --color-light-500: #7c8e89;
+  --color-light-600: #5a6f6a;
+  --color-light-700: #414f4c;
+  --color-light-800: #293432;
+  --color-light-900: #0f1413;
+
+  /* --- Dark Mode (Charcoal Luxury) --- */
+  --color-dark-950: #050505;
+  --color-dark-900: #0a0a0a;
+  --color-dark-800: #141414;
+  --color-dark-700: #1e1e1e;
+  --color-dark-600: #2a2a2a;
+  --color-dark-500: #3d3d3d;
+  --color-dark-400: #525252;
+  --color-dark-300: #a3a3a3;
+  --color-dark-200: #d4d4d4;
+  --color-dark-50: #f6f6f6;
+
+  /* --- Action / Status Colors (refined for luxury real estate) --- */
+  --color-success-500: #22c55e;
+  --color-warning-500: #facc15;
+  --color-danger-500: #dc2626;
+  --color-info-500: #3b82f6;
+}
+
+/* SCROLLBAR */
+@layer base {
+  body {
+    @apply text-light-900 dark:text-dark-50 bg-light-50 dark:bg-dark-900 transition-colors;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-light-400) transparent;
+  }
+}
+
+/* ===========================
+   COMPONENTS FOR VALORA UI
+   =========================== */
+@layer components {
+  /* NAVBAR LINK */
+  .nav-link {
+    @apply text-light-900 dark:text-dark-50 font-medium tracking-wide 
+           hover:text-primary-500 transition-colors text-base;
+  }
+
+  .nav-link-active {
+    @apply text-primary-500 font-semibold;
+  }
+
+  /* PRIMARY BUTTON */
+  .btn-primary {
+    @apply bg-primary-500 text-white font-semibold rounded-lg px-5 py-2
+           shadow-[0_4px_12px_rgba(29,209,161,0.3)]
+           hover:bg-primary-600 transition-colors;
+  }
+
+  /* OUTLINE BUTTON */
+  .btn-outline {
+    @apply border border-primary-500 text-primary-500 font-semibold 
+           rounded-lg px-5 py-2 hover:bg-primary-50 transition;
+  }
+
+  /* GLASS PANEL */
+  .glass {
+    @apply bg-white/60 backdrop-blur-lg shadow-[0_8px_20px_rgba(0,0,0,0.06)]
+           dark:bg-dark-800/50 dark:shadow-[0_6px_20px_rgba(0,0,0,0.4)];
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    @apply text-4xl font-extrabold text-light-900 dark:text-dark-50 tracking-tight mb-4;
+  }
+
+  /* CARD */
+  .card {
+    @apply bg-white dark:bg-dark-800 border border-light-200 dark:border-dark-700 
+           rounded-xl p-6 shadow-md transition-colors;
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "heroTitle": "Live with Value",
+  "heroSubtitle": "Where Every Space Tells a Story",
+  "heroDescription": "VALORA represents premium real estate that combines enduring value with timeless aura. We create spaces that appreciate in worth while enriching lives.",
+  "premium": "Premium Real Estate",
+  "exploreProjects": "Explore Projects",
+  "scheduleConsultation": "Schedule Consultation",
+  "heroButton": "Explore Our Projects",
+  "heroSecondaryButton": "Schedule a Consultation",
+
+  "aboutTitle": "About VALORA",
+  "aboutSubtitle": "Where Value Meets Aura",
+  "aboutDescription": "VALORA is more than just real estate. We create spaces with character, identity, and growing worth. Our properties are designed to offer both exceptional living experiences and solid investment value.",
+
+  "pillarsTitle": "Our Brand Pillars",
+  "pillarValue": "Value",
+  "pillarValueDesc": "Investments that appreciate over time",
+  "pillarVision": "Vision",
+  "pillarVisionDesc": "Future-forward architectural designs",
+  "pillarVitality": "Vitality",
+  "pillarVitalityDesc": "Vibrant, energy-filled communities",
+  "pillarVersatility": "Versatility",
+  "pillarVersatilityDesc": "Flexible spaces for modern living",
+
+  "featuredTitle": "Featured Projects",
+  "featuredSubtitle": "Premium developments with lasting value",
+  "viewAllProjects": "View All Projects",
+
+  "whyChooseTitle": "Why Choose VALORA",
+  "whyChoose1": "Premium Quality",
+  "whyChoose1Desc": "Highest construction standards and premium materials",
+  "whyChoose2": "Strategic Locations",
+  "whyChoose2Desc": "Prime locations with excellent connectivity",
+  "whyChoose3": "Investment Growth",
+  "whyChoose3Desc": "Properties designed to appreciate in value",
+  "whyChoose4": "Modern Amenities",
+  "whyChoose4Desc": "State-of-the-art facilities and smart home features",
+
+  "testimonialsTitle": "What Our Clients Say",
+  "testimonial1": "VALORA transformed my living experience. The quality and attention to detail are exceptional.",
+  "testimonial1Author": "Ahmed Hassan",
+  "testimonial1Role": "Resident",
+  "testimonial2": "A solid investment that continues to grow. VALORA delivers on its promise of value.",
+  "testimonial2Author": "Sarah Mohamed",
+  "testimonial2Role": "Investor",
+
+  "ctaTitle": "Ready to Live with Value?",
+  "ctaSubtitle": "Contact us today to explore premium real estate opportunities",
+  "ctaButton": "Contact Our Team",
+
+  "projectsCompleted": "Projects",
+  "totalInvestment": "Investment",
+  "clientSatisfaction": "Satisfaction",
+  "yearsExperience": "Years"
+}

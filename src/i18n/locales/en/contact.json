@@ -1,0 +1,71 @@
+{
+  "title": "Contact VALORA",
+  "subtitle": "Reach out to our team for inquiries, project information, or investment opportunities. We're here to help you find your perfect space.",
+  "tagline": "Get in Touch",
+
+  "contactInfoTitle": "Contact Information",
+  "addressTitle": "Address",
+  "address": "VALORA Tower, New Cairo, Cairo, Egypt",
+  "phoneTitle": "Phone",
+  "phoneNumber": "+2 010 2048 9251",
+  "emailTitle": "Email",
+  "emailAddress": "info@valora-egypt.com",
+  "officeHoursTitle": "Office Hours",
+  "officeHours": "Sunday - Thursday: 9:00 AM - 6:00 PM",
+  "weekend": "Friday & Saturday: By appointment only",
+
+  "socialMediaTitle": "Follow Us",
+
+  "formTitle": "Send us a Message",
+  "name": "Full Name",
+  "namePlaceholder": "Enter your full name",
+  "email": "Email Address",
+  "emailPlaceholder": "Enter your email address",
+  "phone": "Phone Number",
+  "phonePlaceholder": "Enter your phone number",
+  "subject": "Subject",
+  "selectSubject": "Select a subject",
+  "message": "Message",
+  "messagePlaceholder": "Tell us about your inquiry...",
+  "projectInterest": "Project of Interest",
+  "selectProject": "Select project (optional)",
+
+  "generalInquiry": "General Inquiry",
+  "investment": "Investment Opportunity",
+  "projectInfo": "Project Information",
+  "sales": "Sales Inquiry",
+  "partnership": "Business Partnership",
+  "careers": "Career Opportunities",
+  "other": "Other",
+
+  "sendMessage": "Send Message",
+  "sending": "Sending...",
+
+  "nameRequired": "Name is required",
+  "emailRequired": "Email is required",
+  "emailInvalid": "Please enter a valid email",
+  "phoneRequired": "Phone is required",
+  "subjectRequired": "Please select a subject",
+  "messageRequired": "Message is required",
+  "submitError": "An error occurred. Please try again.",
+
+  "successTitle": "Message Sent Successfully!",
+  "successMessage": "Thank you for contacting VALORA. We'll get back to you within 24 hours.",
+  "sendAnother": "Send another message",
+
+  "privacyNote": "By submitting this form, you agree to our Privacy Policy and Terms of Service.",
+
+  "findUs": "Find Us",
+  "fromAirport": "From Cairo Airport",
+  "fromDowntown": "From Downtown Cairo",
+  "security": "Security & Support",
+
+  "faqTitle": "Frequently Asked Questions",
+  "faq1Q": "What is VALORA's minimum investment?",
+  "faq1A": "Our projects start from AED 1.9M with flexible payment plans.",
+  "faq2Q": "How can I schedule a site visit?",
+  "faq2A": "Contact our sales team to book a personalized site tour.",
+  "faq3Q": "Do you offer after-sales services?",
+  "faq3A": "Yes, we provide comprehensive after-sales support and property management.",
+  "viewAllFAQ": "View all FAQ"
+}
