@@ -474,28 +474,6 @@ const OurProjects = () => {
             </button>
           </div>
         )}
-
-        {/* CTA Section */}
-        <div className="mt-20 glass rounded-3xl p-8 md:p-12 text-center">
-          <h3 className="text-3xl font-bold text-light-900 dark:text-white mb-6">
-            {t("projects:ctaTitle") || "Looking for a Custom Solution?"}
-          </h3>
-          <p className="text-xl text-light-600 dark:text-light-300 mb-8 max-w-2xl mx-auto">
-            {t("projects:ctaDesc") ||
-              "Contact us to discuss bespoke real estate opportunities tailored to your specific requirements."}
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/contact" className="btn-primary px-8 py-3 text-lg">
-              {t("projects:contactUs") || "Contact Our Team"}
-            </Link>
-            <a
-              href="#brochure"
-              className="btn-outline px-8 py-3 text-lg border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white"
-            >
-              {t("projects:downloadBrochure") || "Download Brochure"}
-            </a>
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -590,80 +568,6 @@ const ProjectCard = ({ project, isArabic }) => {
         <p className="text-light-700 dark:text-light-300 text-sm mb-6 line-clamp-2">
           {project.description}
         </p>
-
-        {/* Stats */}
-        <div className="px-6 pb-6 pt-0">
-          <div className="grid grid-cols-3 gap-4 border-t border-light-200 dark:border-dark-700 pt-6">
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary-500">
-                {project.price}
-              </div>
-              <div className="text-xs text-light-600 dark:text-light-400 mt-1">
-                Starting Price
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary-500">
-                {project.size}
-              </div>
-              <div className="text-xs text-light-600 dark:text-light-400 mt-1">
-                Unit Size
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary-500">
-                {project.completion}
-              </div>
-              <div className="text-xs text-light-600 dark:text-light-400 mt-1">
-                Completion
-              </div>
-            </div>
-          </div>
-
-          {/* Features */}
-          <div className="mt-6 flex flex-wrap gap-2">
-            {project.features.slice(0, 3).map((feature, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-primary-500/10 text-primary-500 text-xs rounded"
-              >
-                {feature}
-              </span>
-            ))}
-            {project.features.length > 3 && (
-              <span className="px-2 py-1 bg-light-100 dark:bg-dark-700 text-light-600 dark:text-light-400 text-xs rounded">
-                +{project.features.length - 3} more
-              </span>
-            )}
-          </div>
-
-          {/* CTA Button */}
-          <Link
-            to={`/projects/${project.slug}`}
-            className="mt-6 w-full btn-outline border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white flex items-center justify-center gap-2"
-          >
-            <span>{isArabic ? "عرض التفاصيل" : "View Details"}</span>
-            <svg
-              className={`w-4 h-4 transform transition-transform ${
-                isArabic ? "rtl:rotate-180" : ""
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={
-                  isArabic
-                    ? "M10 19l-7-7m0 0l7-7m-7 7h18"
-                    : "M14 5l7 7m0 0l-7 7m7-7H3"
-                }
-              />
-            </svg>
-          </Link>
-        </div>
       </div>
     </div>
   );

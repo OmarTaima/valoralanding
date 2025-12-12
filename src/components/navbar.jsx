@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import LanguageSwitcher from "../i18n/components/LanguageSwitcher";
+import { path } from "framer-motion/client";
 
 const Navbar = () => {
   const { t } = useTranslation();
@@ -9,7 +10,9 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/", label: t("navigation:home") },
+    { path: "/about", label: t("navigation:about") },
     { path: "/projects", label: t("navigation:projects") },
+    { path: "/join", label: t("navigation:joinUs") },
     { path: "/contact", label: t("navigation:contact") },
   ];
 

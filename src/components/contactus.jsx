@@ -280,7 +280,7 @@ const ContactUs = () => {
                   key={index}
                   className="flex items-start gap-4 p-6 rounded-2xl bg-white dark:bg-dark-800 border border-light-200 dark:border-dark-700 hover:border-primary-500 transition-colors group"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-colors">
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-colors">
                     {info.icon}
                   </div>
                   <div className="flex-1">

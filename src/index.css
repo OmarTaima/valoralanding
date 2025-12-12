@@ -16,7 +16,7 @@
   --color-primary-200: #92ffdd;
   --color-primary-300: #5ff5c8;
   --color-primary-400: #30e9b6;
-  --color-primary-500: #1dd1a1; /* MAIN BRAND GREEN */
+  --color-primary-500: #0b5943; /* MAIN BRAND GREEN */
   --color-primary-600: #14a57d;
   --color-primary-700: #0f7b5d;
   --color-primary-800: #0b5943;
@@ -117,4 +117,18 @@
     @apply bg-white dark:bg-dark-800 border border-light-200 dark:border-dark-700 
            rounded-xl p-6 shadow-md transition-colors;
   }
+}
+/* Footer specific styles */
+footer a {
+  @apply transition-colors duration-300;
+}
+
+/* Smooth scroll for back to top */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Dark mode footer enhancements */
+.dark footer {
+  background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
 }
