@@ -80,7 +80,7 @@ const HeroSection = () => {
               </svg>
             </Link>
 
-            <Link
+            {/* <Link
               to="/contact"
               className="btn-outline inline-flex items-center justify-center gap-2 backdrop-blur-sm border-white/30 text-white hover:bg-white/10"
             >
@@ -100,18 +100,18 @@ const HeroSection = () => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Stats / Social Proof */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl">
+          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl">
             {[
               {
                 value: "50+",
                 label: t("home:projectsCompleted") || "Projects",
               },
               {
-                value: "AED 2.5B",
+                value: "EGP 2.5B",
                 label: t("home:totalInvestment") || "Investment",
               },
               {
@@ -129,7 +129,7 @@ const HeroSection = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
 

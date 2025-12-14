@@ -15,6 +15,10 @@ const ContactUs = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Unified input styling
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl border border-light-200 dark:border-dark-700 bg-white dark:bg-dark-800 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-light-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow shadow-sm";
+
   // Contact information
   const contactInfo = [
     {
@@ -440,7 +444,7 @@ const ContactUs = () => {
                   {/* Name & Email */}
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="form-label">
+                      <label htmlFor="name" className="form-label block mb-2">
                         {t("contact:name") || "Full Name"} *
                       </label>
                       <input
@@ -452,7 +456,7 @@ const ContactUs = () => {
                         placeholder={
                           t("contact:namePlaceholder") || "Enter your full name"
                         }
-                        className={`form-input ${
+                        className={`${inputClass} ${
                           errors.name
                             ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500"
                             : ""
@@ -466,7 +470,7 @@ const ContactUs = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="email" className="form-label">
+                      <label htmlFor="email" className="form-label block mb-2">
                         {t("contact:email") || "Email Address"} *
                       </label>
                       <input
@@ -479,7 +483,7 @@ const ContactUs = () => {
                           t("contact:emailPlaceholder") ||
                           "Enter your email address"
                         }
-                        className={`form-input ${
+                        className={`${inputClass} ${
                           errors.email
                             ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500"
                             : ""
@@ -496,7 +500,7 @@ const ContactUs = () => {
                   {/* Phone & Subject */}
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="phone" className="form-label">
+                      <label htmlFor="phone" className="form-label block mb-2">
                         {t("contact:phone") || "Phone Number"} *
                       </label>
                       <input
@@ -509,7 +513,7 @@ const ContactUs = () => {
                           t("contact:phonePlaceholder") ||
                           "Enter your phone number"
                         }
-                        className={`form-input ${
+                        className={`${inputClass} ${
                           errors.phone
                             ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500"
                             : ""
@@ -523,7 +527,10 @@ const ContactUs = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="subject" className="form-label">
+                      <label
+                        htmlFor="subject"
+                        className="form-label block mb-2"
+                      >
                         {t("contact:subject") || "Subject"} *
                       </label>
                       <select
@@ -531,7 +538,7 @@ const ContactUs = () => {
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        className={`form-input ${
+                        className={`${inputClass} ${
                           errors.subject
                             ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500"
                             : ""
@@ -553,7 +560,10 @@ const ContactUs = () => {
 
                   {/* Project Interest */}
                   <div>
-                    <label htmlFor="projectInterest" className="form-label">
+                    <label
+                      htmlFor="projectInterest"
+                      className="form-label block mb-2"
+                    >
                       {t("contact:projectInterest") || "Project of Interest"}
                     </label>
                     <select
@@ -561,7 +571,7 @@ const ContactUs = () => {
                       name="projectInterest"
                       value={formData.projectInterest}
                       onChange={handleChange}
-                      className="form-input"
+                      className={inputClass}
                     >
                       {projectOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -573,7 +583,7 @@ const ContactUs = () => {
 
                   {/* Message */}
                   <div>
-                    <label htmlFor="message" className="form-label">
+                    <label htmlFor="message" className="form-label block mb-2">
                       {t("contact:message") || "Message"} *
                     </label>
                     <textarea
@@ -586,7 +596,7 @@ const ContactUs = () => {
                         t("contact:messagePlaceholder") ||
                         "Tell us about your inquiry..."
                       }
-                      className={`form-input ${
+                      className={`${inputClass} ${
                         errors.message
                           ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500"
                           : ""
@@ -732,7 +742,7 @@ const ContactUs = () => {
                   t("contact:faq1Q") || "What is VALORA's minimum investment?",
                 answer:
                   t("contact:faq1A") ||
-                  "Our projects start from AED 1.9M with flexible payment plans.",
+                  "Our projects start from EGP 1.9M with flexible payment plans.",
               },
               {
                 question:

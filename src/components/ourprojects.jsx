@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import logoV from "../assets/logos/logo-v.svg";
+import logoA from "../assets/logos/logo-a.svg";
+import logoB from "../assets/logos/logo-b.svg";
+import logoC from "../assets/logos/logo-c.svg";
+import logoD from "../assets/logos/logo-d.svg";
+import logoE from "../assets/logos/logo-e.svg";
+import { projects as projectsData } from "../data/projects";
+import { team } from "../data/team";
 
 const OurProjects = () => {
   const { t, isArabic } = useTranslation();
@@ -32,199 +40,16 @@ const OurProjects = () => {
   ];
 
   // Sample projects data - Replace with actual API data
-  const projects = [
-    {
-      id: 1,
-      slug: "valora-towers-new-cairo",
-      title: t("projects:towersTitle") || "VALORA Towers - New Cairo",
-      category: ["luxury", "residential"],
-      status: "completed",
-      type: "luxury",
-      price: "AED 4,200,000",
-      priceValue: 4200000,
-      size: "380 sqm",
-      location: t("projects:newCairo") || "New Cairo, Egypt",
-      description:
-        t("projects:towersDesc") ||
-        "Luxury twin towers with panoramic views, premium amenities, and smart home technology.",
-      image:
-        "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80",
-      completion: "2024",
-      units: 120,
-      features: ["Pool", "Gym", "Security", "Parking", "Garden"],
-      featured: true,
-    },
-    {
-      id: 2,
-      slug: "aurora-business-park",
-      title: t("projects:auroraTitle") || "AURORA Business Park",
-      category: ["commercial"],
-      status: "ongoing",
-      type: "commercial",
-      price: "AED 8,500,000",
-      priceValue: 8500000,
-      size: "1,200 sqm",
-      location: t("projects:sodicWest") || "SODIC West, Cairo",
-      description:
-        t("projects:auroraDesc") ||
-        "Premium commercial complex with Grade A office spaces and retail outlets.",
-      image:
-        "https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80",
-      completion: "2025",
-      units: 45,
-      features: [
-        "Conference",
-        "Cafeteria",
-        "Parking",
-        "Security",
-        "Fiber Optic",
-      ],
-      featured: true,
-    },
-    {
-      id: 3,
-      slug: "vista-residences",
-      title: t("projects:vistaTitle") || "VISTA Residences",
-      category: ["residential", "apartments"],
-      status: "completed",
-      type: "apartments",
-      price: "AED 2,800,000",
-      priceValue: 2800000,
-      size: "220 sqm",
-      location: t("projects:nasrCity") || "Nasr City, Cairo",
-      description:
-        t("projects:vistaDesc") ||
-        "Modern apartment complex with green spaces and family-friendly amenities.",
-      image:
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      completion: "2023",
-      units: 200,
-      features: ["Gym", "Pool", "Playground", "Security", "Garden"],
-      featured: false,
-    },
-    {
-      id: 4,
-      slug: "serenity-villas",
-      title: t("projects:serenityTitle") || "Serenity Villas",
-      category: ["luxury", "residential"],
-      status: "upcoming",
-      type: "luxury",
-      price: "AED 12,000,000",
-      priceValue: 12000000,
-      size: "850 sqm",
-      location: t("projects:northCoast") || "North Coast, Egypt",
-      description:
-        t("projects:serenityDesc") ||
-        "Exclusive beachfront villas with private pools and premium finishes.",
-      image:
-        "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      completion: "2026",
-      units: 25,
-      features: [
-        "Private Pool",
-        "Beach Access",
-        "Garden",
-        "Security",
-        "Smart Home",
-      ],
-      featured: true,
-    },
-    {
-      id: 5,
-      slug: "nexus-mixed-use",
-      title: t("projects:nexusTitle") || "NEXUS Mixed-Use",
-      category: ["commercial", "residential"],
-      status: "ongoing",
-      type: "commercial",
-      price: "AED 6,500,000",
-      priceValue: 6500000,
-      size: "650 sqm",
-      location: t("projects:sheikhZayed") || "Sheikh Zayed, Cairo",
-      description:
-        t("projects:nexusDesc") ||
-        "Integrated living and working spaces with retail and leisure facilities.",
-      image:
-        "https://images.unsplash.com/photo-1487956382158-bb926046304a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80",
-      completion: "2024",
-      units: 80,
-      features: ["Retail", "Office", "Residential", "Parking", "Gym"],
-      featured: false,
-    },
-    {
-      id: 6,
-      slug: "harmony-apartments",
-      title: t("projects:harmonyTitle") || "Harmony Apartments",
-      category: ["apartments", "residential"],
-      status: "completed",
-      type: "apartments",
-      price: "AED 1,900,000",
-      priceValue: 1900000,
-      size: "180 sqm",
-      location: t("projects:madinty") || "Madinty, Cairo",
-      description:
-        t("projects:harmonyDesc") ||
-        "Affordable luxury apartments with modern designs and community spaces.",
-      image:
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      completion: "2022",
-      units: 150,
-      features: [
-        "Garden",
-        "Playground",
-        "Security",
-        "Parking",
-        "Community Hall",
-      ],
-      featured: false,
-    },
-    {
-      id: 7,
-      slug: "prestige-towers",
-      title: t("projects:prestigeTitle") || "Prestige Towers",
-      category: ["luxury", "commercial"],
-      status: "upcoming",
-      type: "luxury",
-      price: "AED 15,000,000",
-      priceValue: 15000000,
-      size: "1,500 sqm",
-      location: t("projects:newCapital") || "New Administrative Capital",
-      description:
-        t("projects:prestigeDesc") ||
-        "Iconic twin towers offering premium office and residential spaces.",
-      image:
-        "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      completion: "2027",
-      units: 60,
-      features: [
-        "Helipad",
-        "Observatory",
-        "Premium Lobby",
-        "Conference",
-        "Security",
-      ],
-      featured: true,
-    },
-    {
-      id: 8,
-      slug: "oasis-resort",
-      title: t("projects:oasisTitle") || "OASIS Resort & Residences",
-      category: ["luxury", "residential"],
-      status: "ongoing",
-      type: "luxury",
-      price: "AED 9,800,000",
-      priceValue: 9800000,
-      size: "550 sqm",
-      location: t("projects:alamein") || "Alamein, North Coast",
-      description:
-        t("projects:oasisDesc") ||
-        "Luxury resort-style living with golf course access and premium amenities.",
-      image:
-        "https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      completion: "2025",
-      units: 40,
-      features: ["Golf Course", "Spa", "Private Beach", "Pool", "Restaurant"],
-      featured: true,
-    },
+  const projects = projectsData;
+
+  // Partners / portfolio logos with names
+  const partners = [
+    { src: logoV, name: "VALORA" },
+    { src: logoA, name: "Alpha Co." },
+    { src: logoB, name: "Bravo LLC" },
+    { src: logoC, name: "Charlie Inc." },
+    { src: logoD, name: "Delta Partners" },
+    { src: logoE, name: "Echo Group" },
   ];
 
   // Filter and sort projects
@@ -474,6 +299,63 @@ const OurProjects = () => {
             </button>
           </div>
         )}
+
+        {/* Partners / Our Portfolio (Arabic title) */}
+        <div className="mt-16">
+          <h3 className="text-3xl font-bold text-center mb-6">
+            {isArabic ? "شركاء نجاحنا" : "Our Protofolio"}
+          </h3>
+
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center">
+              {partners.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center justify-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg"
+                >
+                  <img
+                    src={p.src}
+                    alt={p.name}
+                    className="h-12 object-contain mb-2"
+                  />
+                  <p className="text-sm text-center text-light-700 dark:text-light-300">
+                    {p.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Our Team */}
+        <div className="mt-12">
+          <h3 className="text-3xl font-bold text-center mb-6">
+            {isArabic ? "فريقنا" : "Our Team"}
+          </h3>
+
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {team.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex flex-col items-center text-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg"
+                >
+                  <img
+                    src={m.photo}
+                    alt={m.name}
+                    className="w-32 h-32 object-cover rounded-full mb-3"
+                  />
+                  <h4 className="font-semibold text-light-900 dark:text-white">
+                    {m.name}
+                  </h4>
+                  <p className="text-sm text-light-700 dark:text-light-300">
+                    {m.position}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -482,94 +364,96 @@ const OurProjects = () => {
 // Project Card Component
 const ProjectCard = ({ project, isArabic }) => {
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
-      {/* Status Badge */}
-      <div className="absolute top-4 left-4 z-10">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            project.status === "completed"
-              ? "bg-success-500/20 text-success-500"
+    <Link to={`/projects/${project.slug}`} className="block">
+      <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+        {/* Status Badge */}
+        <div className="absolute top-4 left-4 z-10">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              project.status === "completed"
+                ? "bg-success-500/20 text-success-500"
+                : project.status === "ongoing"
+                ? "bg-warning-500/20 text-warning-500"
+                : "bg-info-500/20 text-info-500"
+            }`}
+          >
+            {project.status === "completed"
+              ? "Completed"
               : project.status === "ongoing"
-              ? "bg-warning-500/20 text-warning-500"
-              : "bg-info-500/20 text-info-500"
-          }`}
-        >
-          {project.status === "completed"
-            ? "Completed"
-            : project.status === "ongoing"
-            ? "Ongoing"
-            : "Upcoming"}
-        </span>
-      </div>
-
-      {/* Featured Badge */}
-      {project.featured && (
-        <div className="absolute top-4 right-4 z-10">
-          <span className="px-3 py-1 rounded-full bg-primary-500/20 text-primary-500 text-xs font-semibold">
-            Featured
+              ? "Ongoing"
+              : "Upcoming"}
           </span>
         </div>
-      )}
 
-      {/* Image */}
-      <div className="h-64 overflow-hidden">
-        <img
-          src={project.image}
-          alt={project.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-dark-900/60 via-transparent to-transparent" />
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        {/* Category Tags */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {project.category.map((cat, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-light-100 dark:bg-dark-700 text-light-600 dark:text-light-400 text-xs rounded"
-            >
-              {cat}
+        {/* Featured Badge */}
+        {project.featured && (
+          <div className="absolute top-4 right-4 z-10">
+            <span className="px-3 py-1 rounded-full bg-primary-500/20 text-primary-500 text-xs font-semibold">
+              Featured
             </span>
-          ))}
+          </div>
+        )}
+
+        {/* Image */}
+        <div className="h-64 overflow-hidden">
+          <img
+            src={project.image}
+            alt={project.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-dark-900/60 via-transparent to-transparent" />
         </div>
 
-        {/* Title & Location */}
-        <h3 className="text-xl font-bold text-light-900 dark:text-white mb-2 group-hover:text-primary-500 transition-colors">
-          {project.title}
-        </h3>
+        {/* Content */}
+        <div className="p-6">
+          {/* Category Tags */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {project.category.map((cat, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-light-100 dark:bg-dark-700 text-light-600 dark:text-light-400 text-xs rounded"
+              >
+                {cat}
+              </span>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-2 text-light-600 dark:text-light-400 mb-4">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span className="text-sm">{project.location}</span>
+          {/* Title & Location */}
+          <h3 className="text-xl font-bold text-light-900 dark:text-white mb-2 group-hover:text-primary-500 transition-colors">
+            {project.title}
+          </h3>
+
+          <div className="flex items-center gap-2 text-light-600 dark:text-light-400 mb-4">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span className="text-sm">{project.location}</span>
+          </div>
+
+          {/* Description */}
+          <p className="text-light-700 dark:text-light-300 text-sm mb-6 line-clamp-2">
+            {project.description}
+          </p>
         </div>
-
-        {/* Description */}
-        <p className="text-light-700 dark:text-light-300 text-sm mb-6 line-clamp-2">
-          {project.description}
-        </p>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -6,10 +6,18 @@ import commonEN from "./locales/en/common.json";
 import navigationEN from "./locales/en/navigation.json";
 import homeEN from "./locales/en/home.json";
 import contactEN from "./locales/en/contact.json";
+import aboutEN from "./locales/en/about.json";
+import projectsEN from "./locales/en/projects.json";
+import projectDetailEN from "./locales/en/projectDetail.json";
+import footerEN from "./locales/en/footer.json";
 import commonAR from "./locales/ar/common.json";
 import navigationAR from "./locales/ar/navigation.json";
 import homeAR from "./locales/ar/home.json";
 import contactAR from "./locales/ar/contact.json";
+import aboutAR from "./locales/ar/about.json";
+import projectsAR from "./locales/ar/projects.json";
+import projectDetailAR from "./locales/ar/projectDetail.json";
+import footerAR from "./locales/ar/footer.json";
 
 // Translation resources
 const resources = {
@@ -18,12 +26,20 @@ const resources = {
     navigation: navigationEN,
     home: homeEN,
     contact: contactEN,
+    about: aboutEN,
+    projects: projectsEN,
+    projectDetail: projectDetailEN,
+    footer: footerEN,
   },
   ar: {
     common: commonAR,
     navigation: navigationAR,
     home: homeAR,
     contact: contactAR,
+    about: aboutAR,
+    projects: projectsAR,
+    projectDetail: projectDetailAR,
+    footer: footerAR,
   },
 };
 
@@ -37,7 +53,16 @@ i18n
     lng: "en", // Default language
     supportedLngs: ["en", "ar"],
     defaultNS: "common",
-    ns: ["common", "navigation", "home", "contact"],
+    ns: [
+      "common",
+      "navigation",
+      "home",
+      "contact",
+      "about",
+      "projects",
+      "projectDetail",
+      "footer",
+    ],
 
     // Detection options
     detection: {

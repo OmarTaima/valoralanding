@@ -60,7 +60,7 @@ const AboutSection = () => {
     {
       number: "2.5",
       label: t("about:investment") || "Investment Value",
-      suffix: "B AED",
+      suffix: "B EGP",
     },
     {
       number: "98",
@@ -102,111 +102,32 @@ const AboutSection = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20 text-center">
           {/* Left Column - Image/Brand Story */}
           <div
-            className={`order-2 lg:order-1 ${isArabic ? "lg:text-right" : ""}`}
+            className={`order-2 lg:order-1 lg:col-span-2 flex items-center justify-center ${
+              isArabic ? "rtl" : ""
+            }`}
           >
-            <div className="relative">
+            <div
+              className={`relative flex flex-col items-center justify-center text-center`}
+            >
               {/* Brand Logo Display */}
-              <div className="mb-8">
-                <div className="flex items-center justify-center w-24 h-24 bg-linear-to-br from-primary-500 to-primary-700 rounded-2xl shadow-xl mb-6 mx-auto lg:mx-0">
+              <div className="mb-8 flex flex-col items-center justify-center">
+                <div className="flex items-center justify-center w-24 h-24 bg-linear-to-br from-primary-500 to-primary-700 rounded-2xl shadow-xl mb-6 mx-auto">
                   <span className="text-4xl font-bold text-white">V</span>
                 </div>
-                <div className={`${isArabic ? "rtl" : ""}`}>
+                <div className="text-center">
                   <h3 className="text-2xl font-bold text-light-900 dark:text-white mb-2">
                     {t("about:brandMeaning") || "VALORA = Value + Aura"}
                   </h3>
-                  <p className="text-light-600 dark:text-light-300">
+                  <p className="text-light-600 dark:text-light-300 max-w-2xl">
                     {t("about:brandMeaningDesc") ||
                       "The name reflects our belief that a property is not just a building but a space with character and growing worth over time."}
                   </p>
                 </div>
               </div>
-
-              {/* Story */}
-              <div className="space-y-6">
-                <div className="card border-0 shadow-xl backdrop-blur-sm bg-white/50 dark:bg-dark-800/50">
-                  <div className="p-6">
-                    <h4 className="text-xl font-bold text-light-900 dark:text-white mb-4">
-                      {t("about:ourStory") || "Our Story"}
-                    </h4>
-                    <p className="text-light-700 dark:text-light-300 mb-4">
-                      {t("about:storyPart1") ||
-                        "Founded in 2015, VALORA emerged from a vision to redefine luxury living in Egypt. We saw an opportunity to create properties that not only provide homes but also represent sound investments."}
-                    </p>
-                    <p className="text-light-700 dark:text-light-300">
-                      {t("about:storyPart2") ||
-                        "Today, we're recognized for our commitment to quality, innovative designs, and creating communities that stand the test of time."}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Right Column - Pillars */}
-          <div className="order-1 lg:order-2">
-            <h3 className="text-3xl font-bold text-light-900 dark:text-white mb-8">
-              {t("about:ourPillars") || "Our Brand Pillars"}
-            </h3>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {pillars.map((pillar, index) => (
-                <div
-                  key={index}
-                  className={`group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] ${pillar.bgColor} border border-white/10 dark:border-dark-700`}
-                >
-                  {/* Pillar Icon */}
-                  <div
-                    className={`w-14 h-14 rounded-xl flex items-center justify-center ${pillar.bgColor} mb-4 group-hover:scale-110 transition-transform`}
-                  >
-                    <span className="text-2xl">{pillar.icon}</span>
-                  </div>
-
-                  <h4 className={`text-lg font-bold ${pillar.color} mb-2`}>
-                    {pillar.title}
-                  </h4>
-
-                  <p className="text-light-700 dark:text-light-300 text-sm">
-                    {pillar.description}
-                  </p>
-
-                  {/* Hover Effect Line */}
-                  <div
-                    className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ${pillar.color.replace(
-                      "text",
-                      "bg"
-                    )}`}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="glass rounded-3xl p-8 md:p-12 mb-20">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div
-                  className={`text-5xl md:text-6xl font-bold mb-2 bg-linear-to-r ${
-                    index % 2 === 0
-                      ? "from-primary-500 to-primary-300"
-                      : "from-secondary-500 to-secondary-300"
-                  } bg-clip-text text-transparent`}
-                >
-                  {stat.number}
-                  {stat.suffix && (
-                    <span className="text-2xl">{stat.suffix}</span>
-                  )}
-                </div>
-                <div className="text-light-700 dark:text-light-300 font-medium">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
@@ -269,22 +190,6 @@ const AboutSection = () => {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* CEO/Founder Message (Optional) */}
-        <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-linear-to-r from-primary-500/10 to-secondary-500/10 border border-white/10 dark:border-dark-700">
-            <div className="w-4 h-0.5 bg-primary-500 shrink-0" />
-            <p className="text-lg italic text-light-700 dark:text-light-300">
-              {t("about:quote") ||
-                '"We don\'t just build properties; we create legacies that grow in value and significance."'}
-            </p>
-            <div className="w-4 h-0.5 bg-secondary-500 shrink-0" />
-          </div>
-          <p className="mt-4 text-light-600 dark:text-light-400">
-            — {t("about:ceoName") || "Ahmed Saber"},{" "}
-            {t("about:ceoTitle") || "Marketing Manager"}
-          </p>
         </div>
       </div>
     </section>

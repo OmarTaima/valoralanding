@@ -1,0 +1,32 @@
+{
+  "overview": "نظرة عامة",
+  "amenities": "وسائل الراحة",
+  "specifications": "المواصفات",
+  "location": "الموقع",
+  "payment": "خطط الدفع",
+  "gallery": "معرض الصور",
+
+  "loading": "جارٍ تحميل تفاصيل المشروع...",
+  "notFound": "المشروع غير موجود",
+  "backToProjects": "العودة إلى المشاريع",
+
+  "projectOverview": "نظرة عامة على المشروع",
+  "keyFeatures": "الميزات الرئيسية",
+  "premiumAmenities": "وسائل الراحة المميزة",
+  "technicalSpecs": "المواصفات الفنية",
+  "strategicLocation": "موقع استراتيجي",
+  "flexiblePayment": "خطط دفع مرنة",
+  "projectGallery": "معرض المشروع",
+
+  "keyDistances": "المسافات الرئيسية",
+  "areaBenefits": "مزايا المنطقة",
+  "paymentTerms": "شروط الدفع",
+  "virtualTour": "جولة افتراضية",
+
+  "interested": "مهتم بهذا المشروع؟",
+  "contactDesc": "تواصل مع فريق المبيعات لمزيد من المعلومات أو زيارات الموقع أو استشارات مخصصة.",
+  "scheduleVisit": "حدد موعد زيارة",
+  "downloadBrochure": "تحميل الكتيب",
+
+  "relatedProjects": "مشاريع قد تهمك"
+}

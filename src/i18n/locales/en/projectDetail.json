@@ -1,0 +1,32 @@
+{
+  "overview": "Overview",
+  "amenities": "Amenities",
+  "specifications": "Specifications",
+  "location": "Location",
+  "payment": "Payment Plans",
+  "gallery": "Gallery",
+
+  "loading": "Loading project details...",
+  "notFound": "Project Not Found",
+  "backToProjects": "Back to Projects",
+
+  "projectOverview": "Project Overview",
+  "keyFeatures": "Key Features",
+  "premiumAmenities": "Premium Amenities",
+  "technicalSpecs": "Technical Specifications",
+  "strategicLocation": "Strategic Location",
+  "flexiblePayment": "Flexible Payment Plans",
+  "projectGallery": "Project Gallery",
+
+  "keyDistances": "Key Distances",
+  "areaBenefits": "Area Benefits",
+  "paymentTerms": "Payment Terms",
+  "virtualTour": "Take Virtual Tour",
+
+  "interested": "Interested in this Project?",
+  "contactDesc": "Contact our sales team for more information, site visits, or personalized consultations.",
+  "scheduleVisit": "Schedule Site Visit",
+  "downloadBrochure": "Download Brochure",
+
+  "relatedProjects": "You Might Also Like"
+}

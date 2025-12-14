@@ -5,6 +5,53 @@ const Footer = () => {
   const { t, isArabic } = useTranslation();
   const currentYear = new Date().getFullYear();
 
+  // Localize Western digits to Arabic-Indic when Arabic is active
+  const localizeDigits = (input) => {
+    if (!isArabic || !input) return String(input);
+    const map = {
+      0: "٠",
+      1: "١",
+      2: "٢",
+      3: "٣",
+      4: "٤",
+      5: "٥",
+      6: "٦",
+      7: "٧",
+      8: "٨",
+      9: "٩",
+    };
+    return String(input).replace(/\d/g, (d) => map[d] ?? d);
+  };
+
+  const displayedYear = String(currentYear);
+  const rawPhone = t("contact:phoneNumber") || "+2 010 2048 9251";
+  // When Arabic is active, replace normal spaces with non-breaking spaces
+  // so grouping (country code / blocks) doesn't reorder in RTL rendering.
+  const displayedPhone = isArabic
+    ? String(rawPhone).replace(/ /g, "\u00A0")
+    : rawPhone; // keep ascii digits for phone and render LTR span
+  const rawEmail = t("contact:emailAddress") || "info@valora-egypt.com";
+  const registeredRaw =
+    t("footer:registered") || "VALORA Real Estate Development • Company Registration: 123456";
+
+  // When Arabic is active, render ASCII digit sequences inside LTR spans
+  // so numbers (and + signs) keep natural left-to-right ordering.
+  const renderWithLtrNumbers = (rawText) => {
+    if (!rawText) return rawText;
+    if (!isArabic) return rawText;
+    const parts = String(rawText).split(/(\d+)/g);
+    return parts.map((part, idx) => {
+      if (/^\d+$/.test(part)) {
+        return (
+          <span key={idx} dir="ltr" className="inline-block font-sans text-lg font-semibold">
+            {part}
+          </span>
+        );
+      }
+      return <span key={idx}>{part}</span>;
+    });
+  };
+
   // Google Maps embed URL for VALORA location (New Cairo)
   const mapEmbedUrl =
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.837254155114!2d31.395294315113705!3d29.96696328190566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583d5c8f2e5b5f%3A0x1a50e5b5b5b5b5b5!2sNew%20Cairo%2C%20Cairo%20Governorate%2C%20Egypt!5e0!3m2!1sen!2seg!4v1629999999999!5m2!1sen!2seg";
@@ -90,9 +137,9 @@ const Footer = () => {
                     </p>
                     <a
                       href="tel:+201020489251"
-                      className="text-lg font-medium text-white hover:text-primary-300 transition-colors"
+                      className="text-lg font-medium text-white hover:text-primary-300 transition-colors duration-200"
                     >
-                      {t("contact:phoneNumber") || "+2 010 2048 9251"}
+                      <span dir={isArabic ? "ltr" : undefined} className="inline-block font-sans text-lg font-semibold">{displayedPhone}</span>
                     </a>
                     <p className="text-light-400 text-sm mt-1">
                       {t("footer:callUs") || "Call us for inquiries"}
@@ -123,9 +170,9 @@ const Footer = () => {
                     </p>
                     <a
                       href="mailto:info@valora-egypt.com"
-                      className="text-lg font-medium text-white hover:text-primary-300 transition-colors"
+                      className="text-lg font-medium text-white hover:text-primary-300 transition-colors duration-200"
                     >
-                      {t("contact:emailAddress") || "info@valora-egypt.com"}
+                      <span dir="ltr" className="inline-block">{rawEmail}</span>
                     </a>
                     <p className="text-light-400 text-sm mt-1">
                       {t("footer:emailUs") || "Email for general inquiries"}
@@ -150,9 +197,9 @@ const Footer = () => {
                       href="https://wa.me/201020489251"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-lg font-medium text-white hover:text-green-300 transition-colors"
+                      className="text-lg font-medium text-white hover:text-green-300 transition-colors duration-200"
                     >
-                      {t("contact:phoneNumber") || "+2 010 2048 9251"}
+                      <span dir={isArabic ? "ltr" : undefined} className="inline-block font-sans text-lg font-semibold">{displayedPhone}</span>
                     </a>
                     <p className="text-light-400 text-sm mt-1">
                       {t("footer:whatsappUs") || "Message us on WhatsApp"}
@@ -230,7 +277,7 @@ const Footer = () => {
                       href="https://maps.google.com/?q=VALORA+Tower+New+Cairo+Cairo+Egypt"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-outline border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white text-sm px-4 py-2"
+                      className="btn-outline border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white text-sm px-4 py-2 transition-colors duration-200"
                     >
                       {t("footer:openMaps") || "Open Maps"}
                     </a>
@@ -245,16 +292,17 @@ const Footer = () => {
         <div className="border-t border-dark-800 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
-            <div
-              className={`text-center md:text-left ${isArabic ? "rtl" : ""}`}
-            >
+            <div className={`text-center md:text-left ${isArabic ? "rtl" : ""}`}>
               <p className="text-light-400 text-sm">
-                © {currentYear} {t("common:brandName")}.{" "}
-                {t("footer:allRights") || "All rights reserved."}
+                © <span dir={isArabic ? "ltr" : undefined}>{displayedYear}</span> {t("common:brandName")}. {t("footer:allRights") || "All rights reserved."}
               </p>
               <p className="text-light-500 text-xs mt-1">
-                {t("footer:registered") ||
-                  "VALORA Real Estate Development • Company Registration: 123456"}
+                {isArabic
+                  ? renderWithLtrNumbers(
+                      t("footer:registered") || "فالورا للتطوير العقاري • رقم السجل: 123456"
+                    )
+                  : t("footer:registered") ||
+                    "VALORA Real Estate Development • Company Registration: 123456"}
               </p>
             </div>
 
@@ -262,19 +310,19 @@ const Footer = () => {
             <div className="flex gap-6">
               <a
                 href="#privacy"
-                className="text-light-400 hover:text-primary-300 transition-colors text-sm"
+                className="text-light-400 hover:text-primary-300 transition-colors duration-200 text-sm"
               >
                 {t("common:privacyPolicy") || "Privacy"}
               </a>
               <a
                 href="#terms"
-                className="text-light-400 hover:text-primary-300 transition-colors text-sm"
+                className="text-light-400 hover:text-primary-300 transition-colors duration-200 text-sm"
               >
                 {t("common:termsOfService") || "Terms"}
               </a>
               <a
                 href="#accessibility"
-                className="text-light-400 hover:text-primary-300 transition-colors text-sm"
+                className="text-light-400 hover:text-primary-300 transition-colors duration-200 text-sm"
               >
                 {t("footer:accessibility") || "Accessibility"}
               </a>
