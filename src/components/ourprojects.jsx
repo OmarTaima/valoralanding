@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
-import logoV from "../assets/logos/logo-v.svg";
-import logoA from "../assets/logos/logo-a.svg";
-import logoB from "../assets/logos/logo-b.svg";
-import logoC from "../assets/logos/logo-c.svg";
-import logoD from "../assets/logos/logo-d.svg";
-import logoE from "../assets/logos/logo-e.svg";
+import cleopatraLogo from "../assets/logos/Cleopatra.png";
+import diarQataryLogo from "../assets/logos/Diar Qatary.png";
+import hiltonLogo from "../assets/logos/HiltonHotels.png";
+import kempinskiLogo from "../assets/logos/Kempinski.png";
+import mallTantaLogo from "../assets/logos/Mall Tanta.png";
+import marriottLogo from "../assets/logos/Marriott.svg.png";
+import mountainViewLogo from "../assets/logos/Mountain View.png";
+import radissonBluLogo from "../assets/logos/Radisson Blu.png";
+import tmgLogo from "../assets/logos/TMG.png";
+import zero31Logo from "../assets/logos/ZERO31.png";
 import { projects as projectsData } from "../data/projects";
 import { team } from "../data/team";
 
@@ -44,12 +48,16 @@ const OurProjects = () => {
 
   // Partners / portfolio logos with names
   const partners = [
-    { src: logoV, name: "VALORA" },
-    { src: logoA, name: "Alpha Co." },
-    { src: logoB, name: "Bravo LLC" },
-    { src: logoC, name: "Charlie Inc." },
-    { src: logoD, name: "Delta Partners" },
-    { src: logoE, name: "Echo Group" },
+    { src: cleopatraLogo, name: "Cleopatra" },
+    { src: diarQataryLogo, name: "Diar Qatary" },
+    { src: hiltonLogo, name: "Hilton Hotels" },
+    { src: kempinskiLogo, name: "Kempinski" },
+    { src: mallTantaLogo, name: "Mall Tanta" },
+    { src: marriottLogo, name: "Marriott" },
+    { src: mountainViewLogo, name: "Mountain View" },
+    { src: radissonBluLogo, name: "Radisson Blu" },
+    { src: tmgLogo, name: "TMG" },
+    { src: zero31Logo, name: "ZERO31" },
   ];
 
   // Filter and sort projects
@@ -333,12 +341,12 @@ const OurProjects = () => {
             {isArabic ? "فريقنا" : "Our Team"}
           </h3>
 
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-6">
               {team.map((m) => (
                 <div
                   key={m.id}
-                  className="flex flex-col items-center text-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg"
+                  className="flex flex-col items-center text-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg w-64"
                 >
                   <img
                     src={m.photo}

@@ -1,31 +1,24 @@
-import member1 from "../assets/team/member-1.svg";
-import member2 from "../assets/team/member-2.svg";
-import member3 from "../assets/team/member-3.svg";
-import member4 from "../assets/team/member-4.svg";
+import mohamedElHusseiny from "../assets/team/Mohamed El Husseiny ChiefExecutiveOfficer.png";
+import ahmedElSawy from "../assets/team/Ahmed El Sawy ChiefOperatingOfficer.png";
+import essamMohamed from "../assets/team/Essam Mohamed ChiefProjectsOfficer.png";
 
 export const team = [
   {
     id: "t1",
-    name: "Omar Ahmed",
+    name: "Mohamed El Husseiny",
     position: "Chief Executive Officer",
-    photo: member1,
+    photo: mohamedElHusseiny,
   },
   {
     id: "t2",
-    name: "Lina Hassan",
-    position: "Head of Design",
-    photo: member2,
+    name: "Ahmed El Sawy",
+    position: "Chief Operating Officer",
+    photo: ahmedElSawy,
   },
   {
     id: "t3",
-    name: "Samir Khaled",
-    position: "Lead Architect",
-    photo: member3,
-  },
-  {
-    id: "t4",
-    name: "Mona Farid",
-    position: "Sales Director",
-    photo: member4,
+    name: "Essam Mohamed",
+    position: "Chief Projects Officer",
+    photo: essamMohamed,
   },
 ];

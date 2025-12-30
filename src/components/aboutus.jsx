@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import valoraLogo from "../assets/logos/Valora Logo.png";
 
 const AboutSection = () => {
   const { t, isArabic } = useTranslation();
@@ -114,8 +115,12 @@ const AboutSection = () => {
             >
               {/* Brand Logo Display */}
               <div className="mb-8 flex flex-col items-center justify-center">
-                <div className="flex items-center justify-center w-24 h-24 bg-linear-to-br from-primary-500 to-primary-700 rounded-2xl shadow-xl mb-6 mx-auto">
-                  <span className="text-4xl font-bold text-white">V</span>
+                <div className="mb-6 mx-auto">
+                  <img
+                    src={valoraLogo}
+                    alt="Valora Logo"
+                    className="h-24 w-auto object-contain"
+                  />
                 </div>
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-light-900 dark:text-white mb-2">

@@ -37,7 +37,7 @@ const HeroSection = () => {
             <span className="block text-white">
               {t("home:heroTitle") || "Live with Value"}
             </span>
-            <span className="block text-primary-300 mt-2">
+            <span className="block text-primary-500 mt-2">
               {t("home:heroSubtitle") || "Where Every Space Tells a Story"}
             </span>
           </h1>

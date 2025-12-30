@@ -5,7 +5,9 @@
 
   "contactInfoTitle": "Contact Information",
   "addressTitle": "Address",
-  "address": "VALORA Tower, New Cairo, Cairo, Egypt",
+  "address": "El-gharbia Tanta , El-nady St infornt of Tanta Club Gate, Above Waffle Art",
+  "secondaryAddressTitle": "Secondary Office",
+  "secondaryAddress": "Villa 191, El-Banafseg, 5 1st settlement",
   "phoneTitle": "Phone",
   "phoneNumber": "+2 010 2048 9251",
   "emailTitle": "Email",

@@ -5,7 +5,9 @@
 
   "contactInfoTitle": "معلومات الاتصال",
   "addressTitle": "العنوان",
-  "address": "برج فالورا، القاهرة الجديدة، القاهرة، مصر",
+  "address": "طنطا الغربيه شارع النادي امام بوابة النادي اعلي وافل ارت",
+  "secondaryAddressTitle": "مكتب ثانوي",
+  "secondaryAddress": "فيلا ١٩١  البنفسج ٥ التجمع الأول",
   "phoneTitle": "الهاتف",
   "phoneNumber": "+٢ ٠١٠ ٢٠٤٨ ٩٢٥١",
   "emailTitle": "البريد الإلكتروني",

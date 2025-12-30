@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import LanguageSwitcher from "../i18n/components/LanguageSwitcher";
 import { path } from "framer-motion/client";
+import valoraLogo from "../assets/logos/Valora Logo.png";
 
 const Navbar = () => {
   const { t } = useTranslation();
@@ -26,18 +27,11 @@ const Navbar = () => {
               to="/"
               className="flex items-center space-x-2 rtl:space-x-reverse"
             >
-              <div className="flex items-center justify-center w-10 h-10 bg-primary-500 rounded-lg">
-                <span className="text-white font-bold text-xl">V</span>
-              </div>
-
-              <div className="flex flex-col rtl:text-right">
-                <span className="text-2xl font-bold text-light-900 dark:text-dark-50 tracking-tight">
-                  {t("common:brandName")}
-                </span>
-                <span className="text-xs text-light-500 dark:text-dark-300 font-medium">
-                  {t("common:tagline")}
-                </span>
-              </div>
+              <img
+                src={valoraLogo}
+                alt="Valora Logo"
+                className="h-12 w-auto object-contain"
+              />
             </Link>
           </div>
 
