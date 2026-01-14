@@ -320,16 +320,30 @@ const Footer = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-light-300 leading-relaxed">
+                    <p className="text-light-300 font-medium mb-1">
+                      {t("contact:addressTitle") || "Headquarters"}
+                    </p>
+                    <a
+                      href="https://www.google.com/maps?q=30.7963614,30.9958117&z=17&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-light-300 leading-relaxed hover:text-primary-300 transition-colors duration-200 inline-block"
+                    >
                       {t("contact:address") ||
                         "El-gharbia Tanta , El-nady St infornt of Tanta Club Gate, Above Waffle Art"}
-                    </p>
+                    </a>
                     <p className="text-light-300 font-medium mb-1 mt-4">
+                      {t("contact:secondaryAddressTitle") || "Secondary Office"}
                     </p>
-                    <p className="text-light-300 leading-relaxed">
+                    <a
+                      href="https://www.google.com/maps?q=30.057616,31.4741683&z=17&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-light-300 leading-relaxed hover:text-primary-300 transition-colors duration-200 inline-block"
+                    >
                       {t("contact:secondaryAddress") ||
                         "Villa 191, El-Banafseg, 5 1st settlement"}
-                    </p>
+                    </a>
                   </div>
                 </div>
 
