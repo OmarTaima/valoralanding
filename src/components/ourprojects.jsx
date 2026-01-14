@@ -1,25 +1,73 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import alRabwaLogo from "../assets/logos/Al Rabwa.png";
+import alnorWAlbrkhLogo from "../assets/logos/Alnor w Albrkh.png";
+import alrehabLogo from "../assets/logos/Alrehab.png";
+import americanaLogo from "../assets/logos/Americana.png";
+import armedForcesLogo from "../assets/logos/Armed Forces Engineering Authority.png";
 import cleopatraLogo from "../assets/logos/Cleopatra.png";
+import continentalLogo from "../assets/logos/Continental.png";
 import diarQataryLogo from "../assets/logos/Diar Qatary.png";
+import dmcLogo from "../assets/logos/DMC.png";
+import eldohaaLogo from "../assets/logos/Eldohaa.png";
+import elleheimyLogo from "../assets/logos/Elleheimy.png";
 import hiltonLogo from "../assets/logos/HiltonHotels.png";
 import kempinskiLogo from "../assets/logos/Kempinski.png";
+import kenanaLogo from "../assets/logos/Kenana.png";
+import madinatySportingClubLogo from "../assets/logos/Madinaty Sporting Club.png";
+import madinatyLogo from "../assets/logos/Madinaty.png";
 import mallTantaLogo from "../assets/logos/Mall Tanta.png";
+import marakezLogo from "../assets/logos/Marakez.png";
 import marriottLogo from "../assets/logos/Marriott.svg.png";
 import mountainViewLogo from "../assets/logos/Mountain View.png";
+import movenpickLogo from "../assets/logos/Movenpick.png";
 import radissonBluLogo from "../assets/logos/Radisson Blu.png";
+import renaissanceLogo from "../assets/logos/Renaissance.png";
+import stRegisLogo from "../assets/logos/ST Regis.png";
+import steigenbergerLogo from "../assets/logos/Steigenberger.png";
 import tmgLogo from "../assets/logos/TMG.png";
 import zero31Logo from "../assets/logos/ZERO31.png";
 import { projects as projectsData } from "../data/projects";
 import { team } from "../data/team";
 
-const OurProjects = () => {
+const   OurProjects = () => {
   const { t, isArabic } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [visibleProjects, setVisibleProjects] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  // Auto-scroll effect for desktop
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let scrollInterval;
+    const isDesktop = window.innerWidth >= 768; // md breakpoint
+
+    if (isDesktop) {
+      scrollInterval = setInterval(() => {
+        if (scrollContainer) {
+          const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+          const currentScroll = scrollContainer.scrollLeft;
+
+          // If we've reached the end, reset to start
+          if (currentScroll >= maxScroll) {
+            scrollContainer.scrollLeft = 0;
+          } else {
+            // Smooth scroll by 1 pixel
+            scrollContainer.scrollLeft += 1;
+          }
+        }
+      }, 30); // Adjust speed by changing interval (lower = faster)
+    }
+
+    return () => {
+      if (scrollInterval) clearInterval(scrollInterval);
+    };
+  }, []);
 
   // Project categories/filters
   const filters = [
@@ -48,14 +96,31 @@ const OurProjects = () => {
 
   // Partners / portfolio logos with names
   const partners = [
+    { src: alRabwaLogo, name: "Al Rabwa" },
+    { src: alnorWAlbrkhLogo, name: "Alnor w Albrkh" },
+    { src: alrehabLogo, name: "Alrehab" },
+    { src: americanaLogo, name: "Americana" },
+    { src: armedForcesLogo, name: "Armed Forces Engineering Authority" },
     { src: cleopatraLogo, name: "Cleopatra" },
+    { src: continentalLogo, name: "Continental" },
     { src: diarQataryLogo, name: "Diar Qatary" },
+    { src: dmcLogo, name: "DMC" },
+    { src: eldohaaLogo, name: "Eldohaa" },
+    { src: elleheimyLogo, name: "Elleheimy" },
     { src: hiltonLogo, name: "Hilton Hotels" },
     { src: kempinskiLogo, name: "Kempinski" },
+    { src: kenanaLogo, name: "Kenana" },
+    { src: madinatySportingClubLogo, name: "Madinaty Sporting Club" },
+    { src: madinatyLogo, name: "Madinaty" },
     { src: mallTantaLogo, name: "Mall Tanta" },
+    { src: marakezLogo, name: "Marakez" },
     { src: marriottLogo, name: "Marriott" },
     { src: mountainViewLogo, name: "Mountain View" },
+    { src: movenpickLogo, name: "Movenpick" },
     { src: radissonBluLogo, name: "Radisson Blu" },
+    { src: renaissanceLogo, name: "Renaissance" },
+    { src: stRegisLogo, name: "ST Regis" },
+    { src: steigenbergerLogo, name: "Steigenberger" },
     { src: tmgLogo, name: "TMG" },
     { src: zero31Logo, name: "ZERO31" },
   ];
@@ -311,26 +376,32 @@ const OurProjects = () => {
         {/* Partners / Our Portfolio (Arabic title) */}
         <div className="mt-16">
           <h3 className="text-3xl font-bold text-center mb-6">
-            {isArabic ? "شركاء نجاحنا" : "Our Protofolio"}
+            {isArabic ? "شركاء نجاحنا" : "Our Portfolio"}
           </h3>
 
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center">
-              {partners.map((p, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg"
-                >
-                  <img
-                    src={p.src}
-                    alt={p.name}
-                    className="h-12 object-contain mb-2"
-                  />
-                  <p className="text-sm text-center text-light-700 dark:text-light-300">
-                    {p.name}
-                  </p>
-                </div>
-              ))}
+            <div 
+              ref={scrollRef}
+              className="overflow-x-auto scrollbar-hide md:scrollbar-hide hover:scrollbar-thin hover:scrollbar-thumb-primary-500 hover:scrollbar-track-gray-200 dark:hover:scrollbar-track-dark-700"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="flex gap-6 pb-4 min-w-max">
+                {partners.map((p, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col items-center justify-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg w-48 flex-shrink-0"
+                  >
+                    <img
+                      src={p.src}
+                      alt={p.name}
+                      className="h-12 object-contain mb-2"
+                    />
+                    <p className="text-sm text-center text-light-700 dark:text-light-300">
+                      {p.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

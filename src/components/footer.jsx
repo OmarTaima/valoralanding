@@ -320,15 +320,11 @@ const Footer = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-light-300 font-medium mb-1">
-                      {t("contact:addressTitle") || "Headquarters"}
-                    </p>
                     <p className="text-light-300 leading-relaxed">
                       {t("contact:address") ||
                         "El-gharbia Tanta , El-nady St infornt of Tanta Club Gate, Above Waffle Art"}
                     </p>
                     <p className="text-light-300 font-medium mb-1 mt-4">
-                      {t("contact:secondaryAddressTitle") || "Secondary Office"}
                     </p>
                     <p className="text-light-300 leading-relaxed">
                       {t("contact:secondaryAddress") ||
@@ -419,6 +415,17 @@ const Footer = () => {
                 {t("footer:accessibility") || "Accessibility"}
               </a>
             </div>
+          </div>
+        </div>
+
+        {/* Created By Section */}
+        <div className="border-t border-dark-800 py-4">
+          <div className="text-center">
+            <p className="text-light-500 text-xs">
+              {isArabic
+                ? "ينشئ بواسطة SABERGROUPSTUDIOS © www.sabergroup-eg.com"
+                : "Created by SABERGROUPSTUDIOS © www.sabergroup-eg.com"}
+            </p>
           </div>
         </div>
       </div>
