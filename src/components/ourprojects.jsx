@@ -407,7 +407,7 @@ const   OurProjects = () => {
         </div>
 
         {/* Our Team */}
-        <div className="mt-12">
+        {/* <div className="mt-12">
           <h3 className="text-3xl font-bold text-center mb-6">
             {isArabic ? "فريقنا" : "Our Team"}
           </h3>
@@ -434,7 +434,7 @@ const   OurProjects = () => {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );
