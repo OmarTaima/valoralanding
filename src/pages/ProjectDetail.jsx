@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import axios from "axios";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import Footer from "../components/footer";
 
@@ -10,6 +11,9 @@ const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState("");
   // Contact form state for Interested section
   const [formData, setFormData] = useState({
     name: "",
@@ -78,119 +82,45 @@ const ProjectDetail = () => {
     }
   };
 
-  // Sample project data - Replace with API call
-  const projectsData = [
-    {
-      id: 1,
-      slug: "valora-towers-new-cairo",
-      title: t("projects:towersTitle") || "VALORA Towers - New Cairo",
-      subtitle:
-        t("projects:towersSubtitle") || "Luxury Twin Towers in New Cairo",
-      category: ["luxury", "residential"],
-      status: "completed",
-      type: "luxury",
-      price: "EGP 4,200,000",
-      priceValue: 4200000,
-      size: "380 sqm",
-      location: t("projects:newCairo") || "New Cairo, Egypt",
-      description:
-        t("projects:towersDesc") ||
-        "Luxury twin towers with panoramic views, premium amenities, and smart home technology.",
-      fullDescription:
-        t("projects:towersFullDesc") ||
-        "VALORA Towers represent the pinnacle of luxury living in New Cairo. These twin towers offer breathtaking panoramic views of the city, with each unit meticulously designed to provide the ultimate living experience. Featuring smart home technology, premium finishes, and world-class amenities, this development sets a new standard for luxury residential living in Egypt.",
-      images: [
-        "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80",
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        "https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      ],
-      completion: "2024",
-      units: "120 Unit",
-      features: [
-        "Pool",
-        "Gym",
-        "Security",
-        "Parking",
-        "Garden",
-        "Smart Home",
-        "Concierge",
-        "Spa",
-        "Business Center",
-        "Kids Play Area",
-      ],
-      amenities: [
-        {
-          icon: "🏊",
-          title: "Infinity Pool",
-          description: "Rooftop infinity pool with city views",
-        },
-        {
-          icon: "🏋️",
-          title: "Fitness Center",
-          description: "State-of-the-art gym with personal trainers",
-        },
-        {
-          icon: "🌿",
-          title: "Green Spaces",
-          description: "Landscaped gardens and green rooftops",
-        },
-        {
-          icon: "🏢",
-          title: "Business Center",
-          description: "Fully equipped business facilities",
-        },
-        {
-          icon: "👶",
-          title: "Kids Area",
-          description: "Dedicated play areas for children",
-        },
-        {
-          icon: "🚗",
-          title: "Valet Parking",
-          description: "24/7 valet parking service",
-        },
-      ],
-      specifications: [
-        { label: "Project Type", value: "Residential Towers" },
-        { label: "Total Area", value: "45,000 sqm" },
-        { label: "Number of Towers", value: "2" },
-        { label: "Floors", value: "35" },
-        { label: "Unit Types", value: "Apartments, Penthouses" },
-        { label: "Parking Spaces", value: "300" },
-        { label: "Construction", value: "Reinforced Concrete" },
-        { label: "Finishes", value: "Premium International" },
-      ],
-      paymentPlans: [
-        { phase: "Down Payment", percentage: "10%", timing: "Upon Signing" },
-        {
-          phase: "During Construction",
-          percentage: "60%",
-          timing: "Over 36 months",
-        },
-        { phase: "Upon Delivery", percentage: "30%", timing: "Handover" },
-      ],
-      locationFeatures: [
-        "5 minutes from Cairo Festival City",
-        "10 minutes from American University",
-        "15 minutes from Cairo International Airport",
-        "Close to major hospitals and schools",
-      ],
-      mapEmbedUrl:
-        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.837254155114!2d31.395294315113705!3d29.96696328190566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583d5c8f2e5b5f%3A0x1a50e5b5b5b5b5b5!2sNew%20Cairo%2C%20Cairo%20Governorate%2C%20Egypt!5e0!3m2!1sen!2seg!4v1629999999999!5m2!1sen!2seg",
-      brochureUrl: "#",
-      virtualTourUrl: "#",
-      contactPerson: "Ahmed Saber",
-      contactPhone: "+2 010 2048 9251",
-      contactEmail: "sales@valora-egypt.com",
-      featured: true,
-    },
-    // Add other projects similarly...
-  ];
+  // Helper to get localized text
+  const getLocalizedText = (field) => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    if (typeof field === "object") {
+      return isArabic ? (field.ar || field.en || "") : (field.en || field.ar || "");
+    }
+    return "";
+  };
+
+  // Robust location extractor mirroring OurProjects
+  const getProjectLocation = (proj) => {
+    if (!proj) return "";
+    const candidates = [
+      proj.locationDescription,
+      proj.location,
+      proj.address,
+      proj.locationName,
+      proj.city,
+      proj.area,
+      proj.country,
+      proj.town,
+      proj.region,
+      proj.company?.address,
+      proj.company?.location,
+      proj.location?.name,
+    ];
+    for (const c of candidates) {
+      const v = getLocalizedText(c);
+      if (v) return v;
+      if (typeof c === "string" && c.trim()) return c;
+    }
+    return "";
+  };
 
   // Tabs for project details
   const tabs = [
     { id: "overview", label: t("projectDetail:overview") || "Overview" },
+    { id: "units", label: t("projectDetail:units") || "وحدات" },
     { id: "amenities", label: t("projectDetail:amenities") || "Amenities" },
     {
       id: "specifications",
@@ -202,20 +132,230 @@ const ProjectDetail = () => {
   ];
 
   useEffect(() => {
-    // Simulate API call
-    setIsLoading(true);
-    const foundProject = projectsData.find((p) => p.slug === slug);
+    const fetchProjectDetails = async () => {
+      try {
+        setIsLoading(true);
+        setApiError(null);
 
-    setTimeout(() => {
-      setProject(foundProject);
-      if (foundProject) {
-        setFormData((prev) => ({
-          ...prev,
-          projectInterest: foundProject.title,
-        }));
+        // Try to reuse cached raw projects from sessionStorage
+        let cached = null;
+        try {
+          const raw = sessionStorage.getItem("rawProjects");
+          if (raw) cached = JSON.parse(raw);
+        } catch (e) {
+          cached = null;
+        }
+
+        let foundProject = null;
+
+        if (cached && Array.isArray(cached)) {
+          foundProject = cached.find((p) => p.slug === slug);
+        }
+
+        // If not found in cache, fetch from API
+        if (!foundProject) {
+          const response = await axios.get(
+            `${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`,
+            {
+              params: {
+                deleted: false,
+                company: import.meta.env.VITE_CRM_COMPANY_ID,
+                PageCount: 100,
+                page: 1,
+                sort: "-createdAt",
+              },
+            }
+          );
+          foundProject = response.data.data?.find((p) => p.slug === slug);
+          // also update session cache so subsequent navigations reuse it
+          try {
+            sessionStorage.setItem("rawProjects", JSON.stringify(response.data.data || []));
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        if (foundProject) {
+          // helpers to extract numeric area values and format
+          const extractNumber = (val) => {
+            if (val == null) return null;
+            if (typeof val === "number") return val;
+            if (typeof val === "object") {
+              const txt = getLocalizedText(val);
+              const m = String(txt).match(/([0-9]+(?:[\.,][0-9]+)?)/);
+              return m ? parseFloat(m[1].replace(',', '.')) : null;
+            }
+            const m = String(val).match(/([0-9]+(?:[\.,][0-9]+)?)/);
+            return m ? parseFloat(m[1].replace(',', '.')) : null;
+          };
+
+          const formatArea = (num) => {
+            if (num == null || num === "") return "N/A";
+            try {
+              return `${parseInt(num).toLocaleString()} ${t("projectDetail:sqm") || "m²"}`;
+            } catch (e) {
+              return `${num} ${t("projectDetail:sqm") || "m²"}`;
+            }
+          };
+          // build a robust embed URL for the map
+          let mapEmbedUrlVar = "https://maps.google.com?q=New%20Cairo%20Egypt&output=embed";
+          try {
+            const link = foundProject.locationLink;
+            if (link) {
+              const url = String(link);
+              // If it's already an embed URL, use it directly
+              if (url.includes("/embed") || url.includes("google.com/maps/embed")) {
+                mapEmbedUrlVar = url;
+              } else {
+                // Try to extract coordinates from URLs like /@lat,lng,zoom
+                const coordMatch = url.match(/@(-?[0-9]+\.?[0-9]*),(-?[0-9]+\.?[0-9]*)(?:,([0-9]+)z)?/);
+                if (coordMatch) {
+                  const lat = coordMatch[1];
+                  const lng = coordMatch[2];
+                  const zoom = coordMatch[3] || 15;
+                  mapEmbedUrlVar = `https://maps.google.com?q=${lat},${lng}&z=${zoom}&output=embed`;
+                } else {
+                  // If URL contains a query param 'q=' or 'query=' use that
+                  const qMatch = url.match(/[?&](?:q|query)=([^&]+)/i);
+                  if (qMatch) {
+                    mapEmbedUrlVar = `https://maps.google.com?q=${encodeURIComponent(decodeURIComponent(qMatch[1]))}&output=embed`;
+                  } else {
+                    // For short share links (maps.app.goo.gl) or generic links, use the readable location text if available
+                    const locText = getProjectLocation(foundProject);
+                    if (locText) {
+                      mapEmbedUrlVar = `https://maps.google.com?q=${encodeURIComponent(locText)}&output=embed`;
+                    } else {
+                      // as a last resort encode the original URL into q
+                      mapEmbedUrlVar = `https://maps.google.com?q=${encodeURIComponent(url)}&output=embed`;
+                    }
+                  }
+                }
+              }
+            } else {
+              const locText = getProjectLocation(foundProject);
+              if (locText) mapEmbedUrlVar = `https://maps.google.com?q=${encodeURIComponent(locText)}&output=embed`;
+            }
+          } catch (e) {
+            // keep default
+          }
+
+          // Prefer explicit project.area from API; fall back to unit area fields
+          let areaNumber = extractNumber(foundProject.area);
+          if (!areaNumber && Array.isArray(foundProject.units) && foundProject.units.length > 0) {
+            for (const u of foundProject.units) {
+              // Only check explicit numeric area fields on the unit (avoid parsing `layout`)
+              const n = extractNumber(u.area || u.size || u.area_m2 || u.squareMeter || u.square_meters);
+              if (n) {
+                areaNumber = n;
+                break;
+              }
+            }
+          }
+
+          // normalize units list for display
+          const normalizedUnits = (foundProject.units || []).map((u) => {
+            const unitAreaNum = extractNumber(u.area || u.size || u.area_m2 || u.squareMeter || u.square_meters);
+            return {
+              ...u,
+              areaNumber: unitAreaNum,
+              area: unitAreaNum ? `${parseInt(unitAreaNum).toLocaleString()}` : (u.area || ""),
+              layout: getLocalizedText(u.layout) || u.layout || "",
+              pricePerMeter: u.pricePerMeter || u.price || u.pricePerMeter,
+              planViewImages: u.planGallery || u.planViewImages || u.planView || [],
+              features: u.features || [],
+            };
+          });
+
+          // Map API data to component structure
+          const mappedProject = {
+            id: foundProject._id,
+            slug: foundProject.slug,
+            title: getLocalizedText(foundProject.name),
+            subtitle: getProjectLocation(foundProject),
+            category: foundProject.projectType || [],
+            status: foundProject.currentPhase?.toLowerCase().includes("construction") 
+              ? "ongoing" 
+              : foundProject.currentPhase?.toLowerCase().includes("finishing") || foundProject.currentPhase?.toLowerCase().includes("complete")
+              ? "completed"
+              : "upcoming",
+            type: foundProject.projectType?.[0]?.toLowerCase() || "residential",
+            price: foundProject.units?.[0]?.pricePerMeter 
+              ? `EGP ${parseInt(foundProject.units[0].pricePerMeter).toLocaleString()} per m²` 
+              : "Contact for price",
+            priceValue: parseFloat(foundProject.units?.[0]?.pricePerMeter) || 0,
+            sizeNumber: areaNumber || "",
+            size: formatArea(areaNumber),
+            location: getProjectLocation(foundProject) || "Egypt",
+            description: getLocalizedText(foundProject.locationDescription) || "",
+            fullDescriptionParts: [
+              `${getLocalizedText(foundProject.name)} is located at ${getLocalizedText(foundProject.locationDescription)}`,
+              foundProject.currentPhase ? `Current phase: ${foundProject.currentPhase}` : null,
+            ].filter(Boolean),
+            images: [
+              foundProject.mainImage,
+              ...(foundProject.exteriorGallery || []),
+              ...(foundProject.interiorGallery || []),
+              ...(foundProject.planGallery || []).slice(0, 3),
+            ].filter(Boolean),
+            completion: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).getFullYear() : "TBD",
+            units: `${foundProject.availableUnits || "N/A"} ${t("projectDetail:units") || "وحدات"}`,
+            unitsList: normalizedUnits,
+            features: foundProject.features?.map(f => getLocalizedText(f.name)).filter(Boolean) || [],
+            amenities: foundProject.features?.map(f => ({
+              icon: "✨",
+              title: getLocalizedText(f.name),
+              description: getLocalizedText(f.description) || ""
+            })) || [],
+            specifications: [
+              { label: "Project Type", value: foundProject.projectType?.join(", ") || "N/A" },
+              { label: "Total Area", value: foundProject.area ? `${foundProject.area} m²` : "N/A" },
+              { label: "Number of Floors", value: foundProject.numberOfFloors || "N/A" },
+              { label: "Available Units", value: foundProject.availableUnits || "N/A" },
+              { label: "Current Phase", value: foundProject.currentPhase || "N/A" },
+              { label: "Delivery Date", value: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).toLocaleDateString() : "TBD" },
+              { label: "Consultant", value: getLocalizedText(foundProject.projectConsultant) || "N/A" },
+            ],
+            paymentPlans: foundProject.units?.flatMap(unit => unit.payment || []).filter(p => p.deposit || p.numberOfInstallments) || [],
+            locationFeatures: [
+              getLocalizedText(foundProject.locationDescription)
+            ].filter(Boolean),
+            mapEmbedUrl: mapEmbedUrlVar,
+            brochureUrl: "#",
+            virtualTourUrl: "#",
+            contactPerson: "VALORA Sales Team",
+            contactPhone: foundProject.phoneNumbers?.[0] || foundProject.company?.phones?.[0] || "+2 010 2048 9251",
+            contactEmail: foundProject.company?.email || "info@valora-egypt.com",
+            featured: false,
+          };
+
+          setProject(mappedProject);
+          setFormData((prev) => ({
+            ...prev,
+            projectInterest: mappedProject.title,
+          }));
+        } else {
+          setProject(null);
+          setApiError("Project not found");
+        }
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+        setApiError(error.response?.data?.message || error.message);
+        setProject(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, 500);
+    };
+
+    fetchProjectDetails();
+  }, [slug, isArabic]);
+
+  // Ensure we start at top when navigating to a project
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } catch (e) {
+      // ignore in environments without window
+    }
   }, [slug]);
 
   if (isLoading) {
@@ -231,13 +371,16 @@ const ProjectDetail = () => {
     );
   }
 
-  if (!project) {
+  if (!project || apiError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-light-900 dark:text-white mb-4">
             {t("projectDetail:notFound") || "Project Not Found"}
           </h2>
+          {apiError && (
+            <p className="text-light-600 dark:text-light-400 mb-4">{apiError}</p>
+          )}
           <Link to="/projects" className="btn-primary">
             {t("projectDetail:backToProjects") || "Back to Projects"}
           </Link>
@@ -246,12 +389,46 @@ const ProjectDetail = () => {
     );
   }
 
+  const openLightbox = (imageSrc) => {
+    setLightboxImage(imageSrc);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxImage("");
+  };
+
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={closeLightbox}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white hover:text-primary-300 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img
+            src={lightboxImage}
+            alt="Expanded view"
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative h-[70vh] md:h-[80vh] overflow-hidden">
         {/* Main Image */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 cursor-pointer" onClick={() => openLightbox(project.images[activeImage])}>
           <img
             src={project.images[activeImage]}
             alt={project.title}
@@ -329,18 +506,21 @@ const ProjectDetail = () => {
               </p>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:col-span-2">
                   <div className="text-2xl font-bold text-white mb-1">
                     {project.price}
                   </div>
-                  <div className="text-sm text-light-300">Starting Price</div>
+                  <div className="text-sm text-light-300">{t("projectDetail:startingPrice") || "Starting Price"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
-                    {project.size}
+                    <span dir={isArabic ? "ltr" : undefined} className="inline-block">
+                      {project.sizeNumber || "-"}
+                    </span>
+                    <span className="ml-2 text-sm">{t("projectDetail:sqm") || "m²"}</span>
                   </div>
-                  <div className="text-sm text-light-300">Unit Size</div>
+                  <div className="text-sm text-light-300">{t("projectDetail:unitSize") || "Unit Size"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
@@ -352,7 +532,7 @@ const ProjectDetail = () => {
                   <div className="text-2xl font-bold text-white mb-1">
                     {project.units}
                   </div>
-                  <div className="text-sm text-light-300">Total Units</div>
+                  <div className="text-sm text-light-300">{t("projectDetail:totalUnits") || "وحدات"}</div>
                 </div>
               </div>
             </div>
@@ -410,9 +590,13 @@ const ProjectDetail = () => {
                     <h2 className="text-3xl font-bold text-light-900 dark:text-white mb-6">
                       {t("projectDetail:projectOverview") || "Project Overview"}
                     </h2>
-                    <p className="text-lg text-light-700 dark:text-light-300 leading-relaxed mb-8">
-                      {project.fullDescription}
-                    </p>
+                    <div className="mb-8 space-y-4">
+                      {project.fullDescriptionParts?.map((part, idx) => (
+                        <p key={idx} className="text-lg text-light-700 dark:text-light-300 leading-relaxed">
+                          {part}
+                        </p>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Key Features */}
@@ -448,6 +632,117 @@ const ProjectDetail = () => {
                       ))}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Units Tab */}
+              {activeTab === "units" && (
+                <div className="space-y-8">
+                  <h2 className="text-3xl font-bold text-light-900 dark:text-white mb-8">
+                    {t("projectDetail:availableUnits") || "Available Units"}
+                  </h2>
+
+                  {project.unitsList && project.unitsList.length > 0 ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {project.unitsList.map((unit, index) => (
+                        <div
+                          key={unit._id || index}
+                          className="glass rounded-2xl p-6 hover:transform hover:scale-[1.02] transition-all duration-300"
+                        >
+                          {/* Unit Image */}
+                          {unit.planViewImages && unit.planViewImages.length > 0 && (
+                            <div 
+                              className="mb-4 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => openLightbox(unit.planViewImages[0])}
+                            >
+                              <img
+                                src={unit.planViewImages[0]}
+                                alt={`Unit ${getLocalizedText(unit.layout)}`}
+                                className="w-full h-48 object-cover"
+                              />
+                            </div>
+                          )}
+
+                          {/* Unit Type */}
+                          <div className="mb-4">
+                            <span className="px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-xs font-semibold">
+                              {unit.type}
+                            </span>
+                          </div>
+
+                          {/* Layout */}
+                          <h4 className="text-lg font-bold text-light-900 dark:text-white mb-3">
+                            {getLocalizedText(unit.layout)}
+                          </h4>
+
+                          {/* Unit Details */}
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:area") || "Area"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.area} {t("projectDetail:sqm") || "m²"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:pricePerSqm") || "Price per m²"}:</span>
+                              <span className="text-sm font-semibold text-primary-500">
+                                {t("projectDetail:egp") || "EGP"} {parseInt(unit.pricePerMeter).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:totalPrice") || "Total Price"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {t("projectDetail:egp") || "EGP"} {(parseInt(unit.area) * parseInt(unit.pricePerMeter)).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:floor") || "Floor"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.floor}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:view") || "View"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.view}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:available") || "Available"}:</span>
+                              <span className="text-sm font-semibold text-success-500">
+                                {unit.availableUnits} {t("projectDetail:units") || "وحدات"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Unit Features */}
+                          {unit.features && unit.features.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-light-200 dark:border-dark-700">
+                              <p className="text-xs font-semibold text-light-700 dark:text-light-300 mb-2">
+                                {t("projectDetail:features") || "Features"}:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {unit.features.map((feature, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-1 bg-light-100 dark:bg-dark-700 text-xs text-light-700 dark:text-light-300 rounded"
+                                  >
+                                    {getLocalizedText(feature.name)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-light-600 dark:text-light-400">
+                        {t("projectDetail:noUnits") || "No units available at the moment."}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -578,18 +873,7 @@ const ProjectDetail = () => {
                         </ul>
                       </div>
 
-                      <div className="glass rounded-xl p-6">
-                        <h4 className="text-xl font-bold text-light-900 dark:text-white mb-4">
-                          {t("projectDetail:areaBenefits") || "Area Benefits"}
-                        </h4>
-                        <p className="text-light-700 dark:text-light-300">
-                          Located in the heart of New Cairo, this prime location
-                          offers easy access to international schools, premium
-                          shopping malls, medical facilities, and entertainment
-                          venues, making it the perfect choice for families and
-                          professionals.
-                        </p>
-                      </div>
+                     
                     </div>
                   </div>
                 </div>
@@ -659,15 +943,19 @@ const ProjectDetail = () => {
                     {project.images.map((image, index) => (
                       <button
                         key={index}
-                        onClick={() => setActiveImage(index)}
-                        className="relative overflow-hidden rounded-xl aspect-square group"
+                        onClick={() => openLightbox(image)}
+                        className="relative overflow-hidden rounded-xl aspect-square group cursor-pointer"
                       >
                         <img
                           src={image}
                           alt={`${project.title} - Image ${index + 1}`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                          <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
                       </button>
                     ))}
                   </div>

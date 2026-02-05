@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import alRabwaLogo from "../assets/logos/Al Rabwa.png";
 import alnorWAlbrkhLogo from "../assets/logos/Alnor w Albrkh.png";
@@ -28,7 +29,6 @@ import stRegisLogo from "../assets/logos/ST Regis.png";
 import steigenbergerLogo from "../assets/logos/Steigenberger.png";
 import tmgLogo from "../assets/logos/TMG.png";
 import zero31Logo from "../assets/logos/ZERO31.png";
-import { projects as projectsData } from "../data/projects";
 import { team } from "../data/team";
 
 const   OurProjects = () => {
@@ -37,7 +37,65 @@ const   OurProjects = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [visibleProjects, setVisibleProjects] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
+  // store raw API response once per page load
+  const [rawProjects, setRawProjects] = useState(null);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
   const scrollRef = useRef(null);
+
+  // Fetch projects from API
+  // Fetch raw projects once per page load; do not refetch until refresh
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setApiLoading(true);
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`,
+          {
+            params: {
+              deleted: false,
+              company: import.meta.env.VITE_CRM_COMPANY_ID,
+              PageCount: 10,
+              page: 1,
+              sort: "-createdAt",
+            },
+          }
+        );
+
+        // store raw API data and map later (memoized) for localization
+        const data = response.data.data || [];
+        setRawProjects(data);
+        try {
+          sessionStorage.setItem("rawProjects", JSON.stringify(data));
+        } catch (e) {
+          // ignore sessionStorage errors (e.g., in private mode)
+        }
+
+        setApiError(null);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        setApiError(error.response?.data?.message || error.message);
+        setRawProjects([]);
+      } finally {
+        setApiLoading(false);
+      }
+    };
+
+    // If we have cached data from this session, use it instead of fetching
+    try {
+      const cached = sessionStorage.getItem("rawProjects");
+      if (cached) {
+        setRawProjects(JSON.parse(cached));
+        setApiLoading(false);
+        return;
+      }
+    } catch (e) {
+      // ignore parsing errors and fall back to fetching
+    }
+
+    fetchProjects();
+  }, []); // run only once per page load
 
   // Auto-scroll effect for desktop
   useEffect(() => {
@@ -74,10 +132,8 @@ const   OurProjects = () => {
     { id: "all", label: t("projects:all") || "All Projects" },
     { id: "residential", label: t("projects:residential") || "Residential" },
     { id: "commercial", label: t("projects:commercial") || "Commercial" },
-    { id: "luxury", label: t("projects:luxury") || "Luxury Villas" },
-    { id: "apartments", label: t("projects:apartments") || "Apartments" },
-    { id: "completed", label: t("projects:completed") || "Completed" },
-    { id: "upcoming", label: t("projects:upcoming") || "Upcoming" },
+      { id: "completed", label: t("projects:completed") || "Completed" },
+    { id: "ongoing", label: t("projects:ongoing") || "Ongoing" },
   ];
 
   // Sorting options
@@ -91,8 +147,6 @@ const   OurProjects = () => {
     { id: "size", label: t("projects:size") || "Largest First" },
   ];
 
-  // Sample projects data - Replace with actual API data
-  const projects = projectsData;
 
   // Partners / portfolio logos with names
   const partners = [
@@ -125,14 +179,101 @@ const   OurProjects = () => {
     { src: zero31Logo, name: "ZERO31" },
   ];
 
+  // Helper to get localized text
+  const getLocalizedText = (field) => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    if (typeof field === "object") {
+      return isArabic ? (field.ar || field.en || "") : (field.en || field.ar || "");
+    }
+    return "";
+  };
+
+  // Robust location extractor: check common fields where location might be stored
+  const getProjectLocation = (proj) => {
+    if (!proj) return "";
+    const candidates = [
+      proj.locationDescription,
+      proj.location,
+      proj.address,
+      proj.locationName,
+      proj.city,
+      proj.area,
+      proj.country,
+      proj.town,
+      proj.region,
+      proj.company?.address,
+      proj.company?.location,
+      proj.location?.name,
+    ];
+    for (const c of candidates) {
+      const v = getLocalizedText(c);
+      if (v) return v;
+      if (typeof c === "string" && c.trim()) return c;
+    }
+    return "";
+  };
+
+  // map raw projects -> localized UI shape (memoized so we don't recompute unnecessarily)
+  const mappedProjects = useMemo(() => {
+    if (!rawProjects) return [];
+    return rawProjects.map((project) => {
+      // normalize categories: display strings and key identifiers (lowercase English when available)
+      const displayCategories = (project.projectType || []).map((c) => {
+        if (!c) return "";
+        if (typeof c === "string") return c;
+        if (typeof c === "object") {
+          // prefer english name for display fallback to any text
+          return getLocalizedText(c.name || c) || (c.en || c.ar || "");
+        }
+        return "";
+      }).filter(Boolean);
+
+      const categoryKeys = (project.projectType || []).map((c) => {
+        if (!c) return "";
+        if (typeof c === "string") return c.toLowerCase();
+        if (typeof c === "object") {
+          const candidate = c.en || c.name || c.ar || "";
+          return String(candidate).toLowerCase();
+        }
+        return "";
+      }).filter(Boolean);
+
+      return {
+        id: project._id,
+        slug: project.slug || project._id,
+        title: getLocalizedText(project.name),
+        category: displayCategories,
+        categoryKeys,
+        status: project.currentPhase?.toLowerCase().includes("construction")
+          ? "ongoing"
+          : project.currentPhase?.toLowerCase().includes("finishing") || project.currentPhase?.toLowerCase().includes("complete")
+          ? "completed"
+          : "upcoming",
+        type: (categoryKeys && categoryKeys[0]) || "residential",
+        price: `${project.units?.[0]?.pricePerMeter ? `EGP ${parseInt(project.units[0].pricePerMeter).toLocaleString()} per m²` : "Contact for price"}`,
+        priceValue: parseFloat(project.units?.[0]?.pricePerMeter) || 0,
+        size: project.area ? `${project.area} m²` : "N/A",
+        location: getProjectLocation(project) || "Egypt",
+        image: project.mainImage || project.exteriorGallery?.[0] || "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80",
+        completion: project.deliveryDate || project.createdAt,
+        units: project.availableUnits || "N/A",
+        features: project.features?.map((f) => getLocalizedText(f.name)) || [],
+        featured: false,
+      };
+    });
+  }, [rawProjects, isArabic]);
+
   // Filter and sort projects
-  const filteredProjects = projects
+  const filteredProjects = mappedProjects
     .filter((project) => {
       if (selectedFilter === "all") return true;
+      if (selectedFilter === "ongoing") return project.status === "ongoing";
       if (selectedFilter === "completed") return project.status === "completed";
       if (selectedFilter === "upcoming") return project.status === "upcoming";
+      // check normalized category keys or type
       return (
-        project.category.includes(selectedFilter) ||
+        (project.categoryKeys && project.categoryKeys.includes(selectedFilter)) ||
         project.type === selectedFilter
       );
     })
@@ -273,8 +414,67 @@ const   OurProjects = () => {
           </div>
         </div>
 
+        {/* API Loading State */}
+        {apiLoading && (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center gap-3">
+              <svg
+                className="animate-spin h-8 w-8 text-primary-500"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+              <span className="text-lg font-medium text-light-700 dark:text-light-300">
+                {t("projects:loadingProjects") || "Loading projects..."}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* API Error State */}
+        {apiError && !apiLoading && (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+              <svg
+                className="w-12 h-12 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-light-900 dark:text-white mb-4">
+              {t("projects:errorLoading") || "Error Loading Projects"}
+            </h3>
+            <p className="text-light-600 dark:text-light-400 max-w-md mx-auto mb-8">
+              {apiError}
+            </p>
+          </div>
+        )}
+
         {/* Projects Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        {!apiLoading && !apiError && (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {projectsToShow.map((project) => (
             <ProjectCard
               key={project.id}
@@ -282,7 +482,7 @@ const   OurProjects = () => {
               isArabic={isArabic}
             />
           ))}
-        </div>
+          </div>
 
         {/* Load More Button */}
         {hasMoreProjects && (
@@ -340,7 +540,7 @@ const   OurProjects = () => {
         )}
 
         {/* Empty State */}
-        {projectsToShow.length === 0 && (
+        {projectsToShow.length === 0 && !apiLoading && !apiError && (
           <div className="text-center py-16">
             <div className="w-24 h-24 mx-auto mb-6 bg-light-100 dark:bg-dark-800 rounded-full flex items-center justify-center">
               <svg
@@ -371,6 +571,8 @@ const   OurProjects = () => {
               {t("projects:viewAllProjects") || "View All Projects"}
             </button>
           </div>
+        )}
+          </>
         )}
 
         {/* Partners / Our Portfolio (Arabic title) */}
@@ -442,6 +644,7 @@ const   OurProjects = () => {
 
 // Project Card Component
 const ProjectCard = ({ project, isArabic }) => {
+  const { t } = useTranslation();
   return (
     <Link to={`/projects/${project.slug}`} className="block">
       <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
@@ -457,10 +660,10 @@ const ProjectCard = ({ project, isArabic }) => {
             }`}
           >
             {project.status === "completed"
-              ? "Completed"
+              ? t("projects:completed") || "Completed"
               : project.status === "ongoing"
-              ? "Ongoing"
-              : "Upcoming"}
+              ? t("projects:ongoing") || "Ongoing"
+              : t("projects:upcoming") || "Upcoming"}
           </span>
         </div>
 
