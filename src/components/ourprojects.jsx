@@ -97,35 +97,24 @@ const   OurProjects = () => {
     fetchProjects();
   }, []); // run only once per page load
 
-  // Auto-scroll effect for desktop
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+  // Manual scroll handlers (used by left/right buttons)
+  const scrollByAmount = () => {
+    const el = scrollRef.current;
+    if (!el) return 400;
+    return Math.max(300, Math.round(el.clientWidth * 0.7));
+  };
 
-    let scrollInterval;
-    const isDesktop = window.innerWidth >= 768; // md breakpoint
+  const scrollLeft = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: -scrollByAmount(), behavior: "smooth" });
+  };
 
-    if (isDesktop) {
-      scrollInterval = setInterval(() => {
-        if (scrollContainer) {
-          const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-          const currentScroll = scrollContainer.scrollLeft;
-
-          // If we've reached the end, reset to start
-          if (currentScroll >= maxScroll) {
-            scrollContainer.scrollLeft = 0;
-          } else {
-            // Smooth scroll by 1 pixel
-            scrollContainer.scrollLeft += 1;
-          }
-        }
-      }, 30); // Adjust speed by changing interval (lower = faster)
-    }
-
-    return () => {
-      if (scrollInterval) clearInterval(scrollInterval);
-    };
-  }, []);
+  const scrollRight = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: scrollByAmount(), behavior: "smooth" });
+  };
 
   // Project categories/filters
   const filters = [
@@ -358,23 +347,7 @@ const   OurProjects = () => {
               ))}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-3">
-              <span className="text-light-700 dark:text-light-300 font-medium">
-                {t("projects:sortBy") || "Sort by:"}
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 rounded-lg bg-white dark:bg-dark-800 border border-light-300 dark:border-dark-700 text-light-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+           
           </div>
 
           {/* Active Filters Info */}
@@ -581,26 +554,43 @@ const   OurProjects = () => {
             {isArabic ? "شركاء نجاحنا" : "Our Portfolio"}
           </h3>
 
-          <div className="max-w-6xl mx-auto">
-            <div 
-              ref={scrollRef}
-              className="overflow-x-auto scrollbar-hide md:scrollbar-hide hover:scrollbar-thin hover:scrollbar-thumb-primary-500 hover:scrollbar-track-gray-200 dark:hover:scrollbar-track-dark-700"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            <div className="max-w-6xl mx-auto relative">
+            <button
+              onClick={scrollLeft}
+              aria-label="Scroll left"
+              className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 w-10 h-10 rounded-md bg-dark-800 text-light-300 hover:bg-dark-700 flex items-center justify-center shadow-md"
             >
-              <div className="flex gap-6 pb-4 min-w-max">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <button
+              onClick={scrollRight}
+              aria-label="Scroll right"
+              className="absolute -right-12 top-1/2 transform -translate-y-1/2 z-20 w-10 h-10 rounded-md bg-dark-800 text-light-300 hover:bg-dark-700 flex items-center justify-center shadow-md"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <div
+              ref={scrollRef}
+              className="overflow-x-auto scrollbar-hide pl-16 pr-16"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <div className="flex gap-6 pb-4 min-w-max items-center">
                 {partners.map((p, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-col items-center justify-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg w-48 flex-shrink-0"
+                    className="flex items-center justify-center p-4 bg-white/50 dark:bg-dark-700 rounded-lg w-56 h-36 flex-shrink-0"
                   >
                     <img
                       src={p.src}
                       alt={p.name}
-                      className="h-12 object-contain mb-2"
+                      className="h-24 object-contain"
                     />
-                    <p className="text-sm text-center text-light-700 dark:text-light-300">
-                      {p.name}
-                    </p>
                   </div>
                 ))}
               </div>

@@ -1133,7 +1133,7 @@ const ProjectDetail = () => {
                       href={`tel:${project.contactPhone}`}
                       className="text-light-900 dark:text-white hover:text-primary-500"
                     >
-                      {project.contactPhone}
+                      17740
                     </a>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1154,7 +1154,7 @@ const ProjectDetail = () => {
                       href={`mailto:${project.contactEmail}`}
                       className="text-light-900 dark:text-white hover:text-primary-500"
                     >
-                      {project.contactEmail}
+                      sales@valora-rs.com
                     </a>
                   </div>
                 </div>
@@ -1280,7 +1280,7 @@ const ProjectDetail = () => {
                       )}
                     </div>
 
-                    <div>
+                    {/* <div>
                       <label className="text-sm font-medium mb-2 block">
                         {t("contact:projectInterest") || "Project of Interest"}
                       </label>
@@ -1290,7 +1290,7 @@ const ProjectDetail = () => {
                         readOnly
                         className={inputClass}
                       />
-                    </div>
+                    </div> */}
 
                     <div>
                       <label htmlFor="message" className="text-sm font-medium mb-2 block">
