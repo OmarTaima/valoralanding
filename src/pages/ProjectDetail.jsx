@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import { addLead } from "../api";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import cities from "../cities.json";
 import Footer from "../components/footer";
 
 const ProjectDetail = () => {
@@ -18,14 +20,16 @@ const ProjectDetail = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    city: "",
     phone: "",
     subject: "",
-    message: "",
     projectInterest: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState({});
+  const formRef = useRef(null);
 
   const inputClass =
     "w-full px-4 py-3 rounded-xl border border-light-200 dark:border-dark-700 bg-white dark:bg-dark-800 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-light-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow shadow-sm";
@@ -40,15 +44,15 @@ const ProjectDetail = () => {
     const newErrors = {};
     if (!formData.name.trim())
       newErrors.name = t("contact:nameRequired") || "Name is required";
-    if (!formData.email.trim())
+    if (!formData.email.trim()) {
       newErrors.email = t("contact:emailRequired") || "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email =
-        t("contact:emailInvalid") || "Please enter a valid email";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = t("contact:emailInvalid") || "Invalid email address";
+    }
+    if (!formData.city || !formData.city.trim())
+      newErrors.city = t("contact:cityRequired") || "City is required";
     if (!formData.phone.trim())
       newErrors.phone = t("contact:phoneRequired") || "Phone is required";
-    if (!formData.message.trim())
-      newErrors.message = t("contact:messageRequired") || "Message is required";
     return newErrors;
   };
 
@@ -61,21 +65,62 @@ const ProjectDetail = () => {
     }
     setIsSubmitting(true);
     try {
-      await new Promise((res) => setTimeout(res, 1200));
+      const payload = {
+        name: formData.name,
+        email: formData.email || "",
+        phone: formData.phone,
+        otherPhones: [],
+        status: "Pending",
+        addresses: [
+          {
+            area: "",
+            landmark: "",
+            street: "",
+            deleted: false,
+          },
+        ],
+        city: formData.city || "",
+        subCategories: (project && project.subCategories && project.subCategories.length > 0)
+          ? project.subCategories
+          : [],
+        campaigns: [],
+        channels: [],
+        projects: [project.id],
+        files: [],
+        prevOrders: [],
+        sales: [],
+        message: formData.message.trim() ? { message: formData.message.trim() } : { message: "" },
+        company: import.meta.env.VITE_CRM_COMPANY_ID,
+        branch: import.meta.env.VITE_CRM_BRANCH_ID,
+        deleted: false,
+        isWhatsapp: false,
+      };
+
+      await addLead(payload);
+
       setSubmitSuccess(true);
       setFormData({
         name: "",
         email: "",
         phone: "",
         subject: "",
-        message: "",
         projectInterest: "",
+        message: "",
       });
+      // ensure the success message is visible (scroll the form container into view)
+      setTimeout(() => {
+        try {
+          formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch (e) {
+          // ignore
+        }
+      }, 100);
       setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (err) {
+      console.error("Lead submit error:", err);
       setErrors({
         submit:
-          t("contact:submitError") || "An error occurred. Please try again.",
+          err?.response?.data?.message || t("contact:submitError") || "An error occurred. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -361,7 +406,6 @@ const ProjectDetail = () => {
               { label: "Available Units", value: foundProject.availableUnits || "N/A" },
               { label: "Current Phase", value: foundProject.currentPhase || "N/A" },
               { label: "Delivery Date", value: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).toLocaleDateString() : "TBD" },
-              { label: "Consultant", value: getLocalizedText(foundProject.projectConsultant) || "N/A" },
             ],
             paymentPlans: foundProject.units?.flatMap(unit => unit.payment || []).filter(p => p.deposit || p.numberOfInstallments) || [],
             locationFeatures: [
@@ -374,6 +418,12 @@ const ProjectDetail = () => {
             contactPhone: foundProject.phoneNumbers?.[0] || foundProject.company?.phones?.[0] || "+2 010 2048 9251",
             contactEmail: foundProject.company?.email || "info@valora-egypt.com",
             featured: false,
+            subCategories:
+              (Array.isArray(foundProject.subCategories) && foundProject.subCategories.length > 0)
+                ? foundProject.subCategories.map((s) => (typeof s === "string" ? s : s._id)).filter(Boolean)
+                : (foundProject.subCategory
+                    ? [(typeof foundProject.subCategory === "string" ? foundProject.subCategory : foundProject.subCategory._id)]
+                    : []),
           };
 
           setProject(mappedProject);
@@ -558,12 +608,12 @@ const ProjectDetail = () => {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:col-span-2">
+                {/* <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:col-span-2">
                   <div className="text-2xl font-bold text-white mb-1">
                     {project.price}
                   </div>
                   <div className="text-sm text-light-300">{t("projectDetail:startingPrice") || "Starting Price"}</div>
-                </div>
+                </div> */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
                     <span dir={isArabic ? "ltr" : undefined} className="inline-block">
@@ -734,18 +784,18 @@ const ProjectDetail = () => {
                                 {unit.area} {t("projectDetail:sqm") || "m²"}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            {/* <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:pricePerSqm") || "Price per m²"}:</span>
                               <span className="text-sm font-semibold text-primary-500">
                                 {unit.pricePerMeterNum ? `${t("projectDetail:egp") || "EGP"} ${unit.pricePerMeterDisplay}` : (unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.unitTotalPriceNum / (unit.areaNumber || 1)).toLocaleString()} ` : (t("projectDetail:contactForPrice") || "Contact for price"))}
                               </span>
-                            </div>
-                            <div className="flex justify-between items-center">
+                            </div> */}
+                            {/* <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:totalPrice") || "Total Price"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
                                 {unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${unit.totalPriceDisplay}` : (unit.pricePerMeterNum && unit.areaNumber ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.pricePerMeterNum * unit.areaNumber).toLocaleString()}` : (t("projectDetail:contactForPrice") || "Contact for price"))}
                               </span>
-                            </div>
+                            </div> */}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:floor") || "Floor"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
@@ -758,24 +808,24 @@ const ProjectDetail = () => {
                                 {unit.view}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            {/* <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:deposit") || "Deposit"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
                                 {unit.payment && unit.payment.deposit != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.depositDisplay}` : "-"}
                               </span>
-                            </div>
-                            <div className="flex justify-between items-center">
+                            </div> */}
+                            {/* <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:installmentAmount") || "Installment Amount"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
                                 {unit.payment && unit.payment.installmentAmount != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.installmentAmountDisplay}` : "-"}
                               </span>
-                            </div>
-                            <div className="flex justify-between items-center">
+                            </div> */}
+                            {/* <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:numberOfInstallments") || "Number of Installments"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
                                 {unit.payment && unit.payment.numberOfInstallments != null ? unit.payment.numberOfInstallmentsDisplay : "-"}
                               </span>
-                            </div>
+                            </div> */}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:available") || "Available"}:</span>
                               <span className="text-sm font-semibold text-success-500">
@@ -1151,11 +1201,11 @@ const ProjectDetail = () => {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">
-                        {t("contact:email") || "Email Address"} *
+                        {t("contact:email") || "Email"} *
                       </label>
                       <input
-                        name="email"
                         type="email"
+                        name="email"
                         value={formData.email}
                         onChange={handleChange}
                         className={
@@ -1165,13 +1215,41 @@ const ProjectDetail = () => {
                             : "")
                         }
                         placeholder={
-                          t("contact:emailPlaceholder") ||
-                          "Enter your email address"
+                          t("contact:emailPlaceholder") || "Enter your email"
                         }
                       />
                       {errors.email && (
                         <p className="mt-2 text-sm text-danger-500">
                           {errors.email}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        {t("contact:city") || "City"} *
+                      </label>
+                      <select
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className={
+                          inputClass +
+                          (errors.city
+                            ? " border-danger-500 focus:border-danger-500 focus:ring-danger-500"
+                            : "")
+                        }
+                      >
+                        <option value="">{t("contact:selectCity") || "Select a city"}</option>
+                        {cities.map((c) => (
+                          <option key={c._id} value={c._id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.city && (
+                        <p className="mt-2 text-sm text-danger-500">
+                          {errors.city}
                         </p>
                       )}
                     </div>
@@ -1215,31 +1293,21 @@ const ProjectDetail = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        {t("contact:message") || "Message"} *
+                      <label htmlFor="message" className="text-sm font-medium mb-2 block">
+                        {t("contact:message") || "Message"}
                       </label>
                       <textarea
+                        id="message"
                         name="message"
-                        rows={4}
                         value={formData.message}
                         onChange={handleChange}
-                        className={
-                          inputClass +
-                          (errors.message
-                            ? " border-danger-500 focus:border-danger-500 focus:ring-danger-500"
-                            : "")
-                        }
-                        placeholder={
-                          t("contact:messagePlaceholder") ||
-                          "Tell us about your inquiry..."
-                        }
+                        rows="4"
+                        placeholder={t("contact:messagePlaceholder") || "Tell us more about your inquiry..."}
+                        className={inputClass}
                       />
-                      {errors.message && (
-                        <p className="mt-2 text-sm text-danger-500">
-                          {errors.message}
-                        </p>
-                      )}
                     </div>
+
+                   
 
                     {errors.submit && (
                       <div className="p-4 rounded-lg bg-danger-500/10 border border-danger-500/20">

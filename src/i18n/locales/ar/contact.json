@@ -21,6 +21,9 @@
   "formTitle": "أرسل لنا رسالة",
   "name": "الاسم الكامل",
   "namePlaceholder": "أدخل اسمك الكامل",
+  "city": "المدينة",
+  "cityPlaceholder": "أدخل اسم المدينة",
+  "selectCity": "اختر مدينة",
   "email": "البريد الإلكتروني",
   "emailPlaceholder": "أدخل بريدك الإلكتروني",
   "phone": "رقم الهاتف",
@@ -30,7 +33,7 @@
   "message": "الرسالة",
   "messagePlaceholder": "أخبرنا عن استفسارك...",
   "projectInterest": "المشروع المهتم به",
-  "selectProject": "اختر مشروع (اختياري)",
+  "selectProject": "اختر مشروع",
 
   "generalInquiry": "استفسار عام",
   "investment": "فرصة استثمارية",
