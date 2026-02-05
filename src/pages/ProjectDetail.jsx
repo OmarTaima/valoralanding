@@ -252,17 +252,65 @@ const ProjectDetail = () => {
             }
           }
 
-          // normalize units list for display
+          // normalize units list for display and provide fallbacks when fields are missing
           const normalizedUnits = (foundProject.units || []).map((u) => {
             const unitAreaNum = extractNumber(u.area || u.size || u.area_m2 || u.squareMeter || u.square_meters);
+
+            // try explicit numeric values first
+            const explicitPricePerMeter = parseFloat(u.pricePerMeter || u.price || u.price_per_m || null) || null;
+            const explicitUnitTotal = parseFloat(u.unitTotalPrice || u.unit_total_price || null) || null;
+
+            // if total price provided but pricePerMeter missing, derive pricePerMeter
+            let derivedPricePerMeter = null;
+            if (!explicitPricePerMeter && explicitUnitTotal && unitAreaNum) {
+              derivedPricePerMeter = explicitUnitTotal / unitAreaNum;
+            }
+
+            // fallback to project's first unit pricePerMeter if available
+            const projectDefaultPrice = parseFloat(foundProject.units?.[0]?.pricePerMeter) || parseFloat(foundProject.units?.[0]?.price) || null;
+
+            const pricePerMeterNum = explicitPricePerMeter || derivedPricePerMeter || projectDefaultPrice || null;
+
+            // compute unit total price when possible
+            const unitTotalPriceNum = explicitUnitTotal || (pricePerMeterNum && unitAreaNum ? pricePerMeterNum * unitAreaNum : null);
+
+            // normalize payment object and fields (show empty until added)
+            const paymentRaw = Array.isArray(u.payment) ? (u.payment[0] || null) : (u.payment || null);
+            const payment = paymentRaw
+              ? {
+                  deposit: paymentRaw.deposit != null ? paymentRaw.deposit : null,
+                  installmentAmount: paymentRaw.installmentAmount != null ? paymentRaw.installmentAmount : null,
+                  numberOfInstallments: paymentRaw.numberOfInstallments != null ? paymentRaw.numberOfInstallments : null,
+                }
+              : { deposit: null, installmentAmount: null, numberOfInstallments: null };
+
+            const depositDisplay = payment.deposit != null ? `${parseInt(payment.deposit).toLocaleString()}` : null;
+            const installmentAmountDisplay = payment.installmentAmount != null ? `${parseInt(payment.installmentAmount).toLocaleString()}` : null;
+            const numberOfInstallmentsDisplay = payment.numberOfInstallments != null ? `${payment.numberOfInstallments}` : null;
+
             return {
               ...u,
               areaNumber: unitAreaNum,
+              // friendly area string (no unit suffix here, append in UI)
               area: unitAreaNum ? `${parseInt(unitAreaNum).toLocaleString()}` : (u.area || ""),
               layout: getLocalizedText(u.layout) || u.layout || "",
-              pricePerMeter: u.pricePerMeter || u.price || u.pricePerMeter,
-              planViewImages: u.planGallery || u.planViewImages || u.planView || [],
+              // canonical numeric fields to use in UI
+              pricePerMeterNum,
+              unitTotalPriceNum,
+              pricePerMeterDisplay: pricePerMeterNum ? `${parseInt(pricePerMeterNum).toLocaleString()}` : null,
+              totalPriceDisplay: unitTotalPriceNum ? `${parseInt(unitTotalPriceNum).toLocaleString()}` : null,
+              planViewImages: u.planGallery || u.planViewImages || u.planView || u.currentImages || [],
               features: u.features || [],
+              availableUnitsNormalized: u.availableUnits || foundProject.availableUnits || null,
+              payment: {
+                raw: paymentRaw,
+                deposit: payment.deposit,
+                installmentAmount: payment.installmentAmount,
+                numberOfInstallments: payment.numberOfInstallments,
+                depositDisplay,
+                installmentAmountDisplay,
+                numberOfInstallmentsDisplay,
+              },
             };
           });
 
@@ -352,7 +400,10 @@ const ProjectDetail = () => {
   // Ensure we start at top when navigating to a project
   useEffect(() => {
     try {
-      window.scrollTo({ top: 0, behavior: "auto" });
+      // Only scroll to top when the user is scrolled down to avoid unexpected jumps
+      if (typeof window !== "undefined" && (window.scrollY || window.pageYOffset) > 50) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
     } catch (e) {
       // ignore in environments without window
     }
@@ -686,13 +737,13 @@ const ProjectDetail = () => {
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:pricePerSqm") || "Price per m²"}:</span>
                               <span className="text-sm font-semibold text-primary-500">
-                                {t("projectDetail:egp") || "EGP"} {parseInt(unit.pricePerMeter).toLocaleString()}
+                                {unit.pricePerMeterNum ? `${t("projectDetail:egp") || "EGP"} ${unit.pricePerMeterDisplay}` : (unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.unitTotalPriceNum / (unit.areaNumber || 1)).toLocaleString()} ` : (t("projectDetail:contactForPrice") || "Contact for price"))}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:totalPrice") || "Total Price"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {t("projectDetail:egp") || "EGP"} {(parseInt(unit.area) * parseInt(unit.pricePerMeter)).toLocaleString()}
+                                {unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${unit.totalPriceDisplay}` : (unit.pricePerMeterNum && unit.areaNumber ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.pricePerMeterNum * unit.areaNumber).toLocaleString()}` : (t("projectDetail:contactForPrice") || "Contact for price"))}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -708,9 +759,27 @@ const ProjectDetail = () => {
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:deposit") || "Deposit"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.payment && unit.payment.deposit != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.depositDisplay}` : "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:installmentAmount") || "Installment Amount"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.payment && unit.payment.installmentAmount != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.installmentAmountDisplay}` : "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:numberOfInstallments") || "Number of Installments"}:</span>
+                              <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                {unit.payment && unit.payment.numberOfInstallments != null ? unit.payment.numberOfInstallmentsDisplay : "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:available") || "Available"}:</span>
                               <span className="text-sm font-semibold text-success-500">
-                                {unit.availableUnits} {t("projectDetail:units") || "وحدات"}
+                                {unit.availableUnitsNormalized || (t("projectDetail:units") || "N/A")} {t("projectDetail:units") || "وحدات"}
                               </span>
                             </div>
                           </div>
