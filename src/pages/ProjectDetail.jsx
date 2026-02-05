@@ -393,6 +393,7 @@ const ProjectDetail = () => {
             completion: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).getFullYear() : "TBD",
             units: `${foundProject.availableUnits || "N/A"} ${t("projectDetail:units") || "وحدات"}`,
             unitsList: normalizedUnits,
+            showPrices: !!foundProject.showPrices,
             features: foundProject.features?.map(f => getLocalizedText(f.name)).filter(Boolean) || [],
             amenities: foundProject.features?.map(f => ({
               icon: "✨",
@@ -784,18 +785,31 @@ const ProjectDetail = () => {
                                 {unit.area} {t("projectDetail:sqm") || "m²"}
                               </span>
                             </div>
-                            {/* <div className="flex justify-between items-center">
-                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:pricePerSqm") || "Price per m²"}:</span>
-                              <span className="text-sm font-semibold text-primary-500">
-                                {unit.pricePerMeterNum ? `${t("projectDetail:egp") || "EGP"} ${unit.pricePerMeterDisplay}` : (unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.unitTotalPriceNum / (unit.areaNumber || 1)).toLocaleString()} ` : (t("projectDetail:contactForPrice") || "Contact for price"))}
-                              </span>
-                            </div> */}
-                            {/* <div className="flex justify-between items-center">
-                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:totalPrice") || "Total Price"}:</span>
-                              <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.unitTotalPriceNum ? `${t("projectDetail:egp") || "EGP"} ${unit.totalPriceDisplay}` : (unit.pricePerMeterNum && unit.areaNumber ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.pricePerMeterNum * unit.areaNumber).toLocaleString()}` : (t("projectDetail:contactForPrice") || "Contact for price"))}
-                              </span>
-                            </div> */}
+                            {project.showPrices && (
+                              <>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:pricePerSqm") || "Price per m²"}:</span>
+                                  <span className="text-sm font-semibold text-primary-500">
+                                    {unit.pricePerMeterNum
+                                      ? `${t("projectDetail:egp") || "EGP"} ${unit.pricePerMeterDisplay}`
+                                      : unit.unitTotalPriceNum
+                                      ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.unitTotalPriceNum / (unit.areaNumber || 1)).toLocaleString()}`
+                                      : (t("projectDetail:contactForPrice") || "Contact for price")}
+                                  </span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:totalPrice") || "Total Price"}:</span>
+                                  <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                    {unit.unitTotalPriceNum
+                                      ? `${t("projectDetail:egp") || "EGP"} ${unit.totalPriceDisplay}`
+                                      : (unit.pricePerMeterNum && unit.areaNumber)
+                                      ? `${t("projectDetail:egp") || "EGP"} ${Math.round(unit.pricePerMeterNum * unit.areaNumber).toLocaleString()}`
+                                      : (t("projectDetail:contactForPrice") || "Contact for price")}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:floor") || "Floor"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
@@ -808,24 +822,31 @@ const ProjectDetail = () => {
                                 {unit.view}
                               </span>
                             </div>
-                            {/* <div className="flex justify-between items-center">
-                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:deposit") || "Deposit"}:</span>
-                              <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.payment && unit.payment.deposit != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.depositDisplay}` : "-"}
-                              </span>
-                            </div> */}
-                            {/* <div className="flex justify-between items-center">
-                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:installmentAmount") || "Installment Amount"}:</span>
-                              <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.payment && unit.payment.installmentAmount != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.installmentAmountDisplay}` : "-"}
-                              </span>
-                            </div> */}
-                            {/* <div className="flex justify-between items-center">
-                              <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:numberOfInstallments") || "Number of Installments"}:</span>
-                              <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.payment && unit.payment.numberOfInstallments != null ? unit.payment.numberOfInstallmentsDisplay : "-"}
-                              </span>
-                            </div> */}
+                         
+                            {(unit.payment && (unit.payment.deposit != null || unit.payment.installmentAmount != null || unit.payment.numberOfInstallments != null)) && (
+                              <>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:deposit") || "Deposit"}:</span>
+                                  <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                    {unit.payment && unit.payment.deposit != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.depositDisplay}` : "-"}
+                                  </span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:installmentAmount") || "Installment Amount"}:</span>
+                                  <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                    {unit.payment && unit.payment.installmentAmount != null ? `${t("projectDetail:egp") || "EGP"} ${unit.payment.installmentAmountDisplay}` : "-"}
+                                  </span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:numberOfInstallments") || "Number of Installments"}:</span>
+                                  <span className="text-sm font-semibold text-light-900 dark:text-white">
+                                    {unit.payment && unit.payment.numberOfInstallments != null ? unit.payment.numberOfInstallmentsDisplay : "-"}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:available") || "Available"}:</span>
                               <span className="text-sm font-semibold text-success-500">

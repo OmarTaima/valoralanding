@@ -558,20 +558,20 @@ const   OurProjects = () => {
             <button
               onClick={scrollLeft}
               aria-label="Scroll left"
-              className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 w-10 h-10 rounded-md bg-dark-800 text-light-300 hover:bg-dark-700 flex items-center justify-center shadow-md"
+              className="absolute -left-20 top-1/2 transform -translate-y-1/2 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white hover:scale-110 transition-transform shadow-2xl flex items-center justify-center ring-1 ring-primary-600/30 focus:outline-none focus:ring-4 focus:ring-primary-500/20"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
 
             <button
               onClick={scrollRight}
               aria-label="Scroll right"
-              className="absolute -right-12 top-1/2 transform -translate-y-1/2 z-20 w-10 h-10 rounded-md bg-dark-800 text-light-300 hover:bg-dark-700 flex items-center justify-center shadow-md"
+              className="absolute -right-20 top-1/2 transform -translate-y-1/2 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white hover:scale-110 transition-transform shadow-2xl flex items-center justify-center ring-1 ring-primary-600/30 focus:outline-none focus:ring-4 focus:ring-primary-500/20"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
 
