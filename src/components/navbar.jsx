@@ -13,7 +13,7 @@ const Navbar = () => {
     { path: "/", label: t("navigation:home") },
     { path: "/about", label: t("navigation:about") },
     { path: "/projects", label: t("navigation:projects") },
-    { path: "/join", label: t("navigation:joinUs") },
+    { path: "https://job-application-form-snowy.vercel.app/Valora", label: t("navigation:joinUs"), external: true },
     { path: "/contact", label: t("navigation:contact") },
   ];
 
@@ -37,20 +37,32 @@ const Navbar = () => {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/"}
-                className={({ isActive }) =>
-                  `nav-link relative px-2 py-1 text-lg ${
-                    isActive ? "nav-link-active" : ""
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            {navItems.map((item) =>
+              item.external ? (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`nav-link relative px-2 py-1 text-lg`}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  className={({ isActive }) =>
+                    `nav-link relative px-2 py-1 text-lg ${
+                      isActive ? "nav-link-active" : ""
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              )
+            )}
             <LanguageSwitcher className="btn-outline" />
           </div>
 
@@ -92,21 +104,34 @@ const Navbar = () => {
         {/* Mobile menu panel */}
         {mobileOpen && (
           <div className="md:hidden mt-3 space-y-2">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/"}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  `block nav-link px-3 py-2 rounded ${
-                    isActive ? "nav-link-active" : ""
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            {navItems.map((item) =>
+              item.external ? (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileOpen(false)}
+                  className={`block nav-link px-3 py-2 rounded`}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `block nav-link px-3 py-2 rounded ${
+                      isActive ? "nav-link-active" : ""
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              )
+            )}
           </div>
         )}
       </div>
