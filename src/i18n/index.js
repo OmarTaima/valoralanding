@@ -10,6 +10,7 @@ import aboutEN from "./locales/en/about.json";
 import projectsEN from "./locales/en/projects.json";
 import projectDetailEN from "./locales/en/projectDetail.json";
 import footerEN from "./locales/en/footer.json";
+import joinUsEN from "./locales/en/joinUs.json";
 import commonAR from "./locales/ar/common.json";
 import navigationAR from "./locales/ar/navigation.json";
 import homeAR from "./locales/ar/home.json";
@@ -18,6 +19,7 @@ import aboutAR from "./locales/ar/about.json";
 import projectsAR from "./locales/ar/projects.json";
 import projectDetailAR from "./locales/ar/projectDetail.json";
 import footerAR from "./locales/ar/footer.json";
+import joinUsAR from "./locales/ar/joinUs.json";
 
 // Translation resources
 const resources = {
@@ -30,6 +32,7 @@ const resources = {
     projects: projectsEN,
     projectDetail: projectDetailEN,
     footer: footerEN,
+    joinUs: joinUsEN,
   },
   ar: {
     common: commonAR,
@@ -40,6 +43,7 @@ const resources = {
     projects: projectsAR,
     projectDetail: projectDetailAR,
     footer: footerAR,
+    joinUs: joinUsAR,
   },
 };
 
@@ -62,6 +66,7 @@ i18n
       "projects",
       "projectDetail",
       "footer",
+      "joinUs",
     ],
 
     // Detection options

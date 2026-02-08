@@ -9,6 +9,8 @@ import About from "./pages/About";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Contact from "./pages/Contact";
+import JoinUs from "./pages/JoinUs";
+import JobApplicationForm from "./pages/JobApplicationForm";
 import NotFound from "./pages/NotFound";
 
 import "./index.css";
@@ -26,6 +28,8 @@ function App() {
             <Route path="projects" element={<Projects />} />
             <Route path="projects/:slug" element={<ProjectDetail />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="join-us" element={<JoinUs />} />
+            <Route path="join-us/:slug" element={<JobApplicationForm />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

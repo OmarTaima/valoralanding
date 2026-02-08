@@ -13,7 +13,7 @@ const Navbar = () => {
     { path: "/", label: t("navigation:home") },
     { path: "/about", label: t("navigation:about") },
     { path: "/projects", label: t("navigation:projects") },
-    { path: "https://job-application-form-snowy.vercel.app/Valora", label: t("navigation:joinUs"), external: true },
+    { path: "/join-us", label: t("navigation:joinUs") },
     { path: "/contact", label: t("navigation:contact") },
   ];
 
