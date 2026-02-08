@@ -33,11 +33,25 @@ const JobApplicationForm = () => {
       jobPosition.customFields
         ?.filter((field) => field.inputType === 'groupField' || field.inputType === 'repeatable_group')
         .forEach((field) => {
-          groups[field.fieldId] = [{}];
+          const fieldKey = field.name || field.fieldId;
+          groups[fieldKey] = [{}];
         });
       setRepeatableGroups(groups);
     }
   }, [jobPosition]);
+
+  // Helper function to get the field key (convert label to readable key)
+  const getFieldKey = (field) => {
+    const labelText = getLocalizedText(field.label);
+    if (!labelText) return field.fieldId; // Fallback to fieldId if no label
+    
+    // Convert label to snake_case readable key
+    return labelText
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s\u0600-\u06FF]/g, '') // Remove special chars but keep Arabic
+      .replace(/\s+/g, '_'); // Replace spaces with underscores
+  };
 
   const getLocalizedText = (field) => {
     if (!field) return '';
@@ -142,10 +156,11 @@ const JobApplicationForm = () => {
 
     jobPosition?.customFields?.forEach((field) => {
       if (field.isRequired && field.inputType !== 'groupField' && field.inputType !== 'repeatable_group') {
+        const fieldKey = getFieldKey(field);
         if (field.inputType === 'tags') {
           schema = schema.shape({
             customResponses: Yup.object().shape({
-              [field.fieldId]: Yup.array()
+              [fieldKey]: Yup.array()
                 .min(1, t('joinUs:required') || 'Required')
                 .required(t('joinUs:required') || 'Required'),
             }),
@@ -153,7 +168,7 @@ const JobApplicationForm = () => {
         } else {
           schema = schema.shape({
             customResponses: Yup.object().shape({
-              [field.fieldId]: Yup.mixed().required(t('joinUs:required') || 'Required'),
+              [fieldKey]: Yup.mixed().required(t('joinUs:required') || 'Required'),
             }),
           });
         }
@@ -318,14 +333,15 @@ const JobApplicationForm = () => {
     cvFile: null,
     agreedToTerms: false,
     customResponses: jobPosition?.customFields?.reduce((acc, field) => {
+      const fieldKey = getFieldKey(field);
       if (field.inputType === 'tags') {
-        acc[field.fieldId] = [];
+        acc[fieldKey] = [];
       } else if (field.inputType === 'repeatable_group') {
-        acc[field.fieldId] = [];
+        acc[fieldKey] = [];
       } else if (field.inputType === 'groupField') {
-        acc[field.fieldId] = {};
+        acc[fieldKey] = {};
       } else {
-        acc[field.fieldId] = '';
+        acc[fieldKey] = '';
       }
       return acc;
     }, {}) || {},
@@ -675,11 +691,12 @@ const JobApplicationForm = () => {
 
                       <div className="flex flex-col gap-6 mb-8">
                         {jobPosition.customFields.map((field) => {
-                          const fieldName = `customResponses.${field.fieldId}`;
+                          const fieldKey = getFieldKey(field);
+                          const fieldName = `customResponses.${fieldKey}`;
 
                           if ((field.inputType === 'groupField' || field.inputType === 'repeatable_group') && field.groupFields) {
                             return (
-                              <div key={field.fieldId} className="w-full">
+                              <div key={fieldKey} className="w-full">
                                 <div className="p-6 rounded-2xl bg-primary-500/5 border-2 border-primary-500/20">
                                   <h4 className="text-lg font-bold text-light-900 dark:text-white mb-4 flex items-center gap-2">
                                     <div className="w-1 h-6 bg-primary-500 rounded-full"></div>
@@ -687,29 +704,32 @@ const JobApplicationForm = () => {
                                     {field.isRequired && <span className="text-red-500 ml-1">*</span>}
                                   </h4>
                                   
-                                  {repeatableGroups[field.fieldId]?.map((group, groupIndex) => (
+                                  {repeatableGroups[fieldKey]?.map((group, groupIndex) => (
                                     <div key={groupIndex} className="mb-4 p-4 bg-white dark:bg-dark-800 rounded-xl border border-light-200 dark:border-dark-600">
                                       <div className="grid grid-cols-1 gap-4 mb-3">
-                                        {field.groupFields.map((subField) => (
-                                          <div key={subField.fieldId}>
+                                        {field.groupFields.map((subField) => {
+                                          const subFieldKey = getFieldKey(subField);
+                                          return (
+                                          <div key={subFieldKey}>
                                             <label className="block text-sm font-semibold text-light-900 dark:text-white mb-2">
                                               {getLocalizedText(subField.label)}
                                               {subField.isRequired && <span className="text-red-500 ml-1">*</span>}
                                             </label>
                                             <input
                                               type={subField.inputType || 'text'}
-                                              value={group[subField.fieldId] || ''}
-                                              onChange={(e) => handleRepeatableGroupChange(field.fieldId, groupIndex, subField.fieldId, e.target.value)}
+                                              value={group[subFieldKey] || ''}
+                                              onChange={(e) => handleRepeatableGroupChange(fieldKey, groupIndex, subFieldKey, e.target.value)}
                                               required={subField.isRequired}
                                               className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200"
                                             />
                                           </div>
-                                        ))}
+                                          );
+                                        })}
                                       </div>
-                                      {repeatableGroups[field.fieldId].length > 1 && (
+                                      {repeatableGroups[fieldKey].length > 1 && (
                                         <button
                                           type="button"
-                                          onClick={() => removeRepeatableGroup(field.fieldId, groupIndex)}
+                                          onClick={() => removeRepeatableGroup(fieldKey, groupIndex)}
                                           className="text-red-500 hover:text-red-600 text-sm font-semibold flex items-center gap-1"
                                         >
                                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -723,7 +743,7 @@ const JobApplicationForm = () => {
                                   
                                   <button
                                     type="button"
-                                    onClick={() => addRepeatableGroup(field.fieldId)}
+                                    onClick={() => addRepeatableGroup(fieldKey)}
                                     className="mt-3 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -737,7 +757,7 @@ const JobApplicationForm = () => {
                           }
 
                           return (
-                            <div key={field.fieldId}>
+                            <div key={fieldKey}>
                               <label className="block text-sm font-semibold text-light-900 dark:text-white mb-2">{getLocalizedText(field.label)}
                                 {field.isRequired && <span className="text-red-500 ml-1">*</span>}
                               </label>
@@ -750,8 +770,8 @@ const JobApplicationForm = () => {
                                     placeholder={getLocalizedText(field.label)}
                                     className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200"
                                   />
-                                  {errors.customResponses?.[field.fieldId] && touched.customResponses?.[field.fieldId] && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[field.fieldId]}</p>
+                                  {errors.customResponses?.[fieldKey] && touched.customResponses?.[fieldKey] && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[fieldKey]}</p>
                                   )}
                                 </>
                               )}
@@ -765,8 +785,8 @@ const JobApplicationForm = () => {
                                     placeholder={getLocalizedText(field.label)}
                                     className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200 resize-y"
                                   />
-                                  {errors.customResponses?.[field.fieldId] && touched.customResponses?.[field.fieldId] && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[field.fieldId]}</p>
+                                  {errors.customResponses?.[fieldKey] && touched.customResponses?.[fieldKey] && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[fieldKey]}</p>
                                   )}
                                 </>
                               )}
@@ -776,7 +796,7 @@ const JobApplicationForm = () => {
                                   <Field
                                     as="select"
                                     name={fieldName}
-                                    value={values.customResponses?.[field.fieldId] ?? ''}
+                                    value={values.customResponses?.[fieldKey] ?? ''}
                                     className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200 cursor-pointer"
                                   >
                                     <option value="" disabled>
@@ -788,8 +808,8 @@ const JobApplicationForm = () => {
                                       </option>
                                     ))}
                                   </Field>
-                                  {errors.customResponses?.[field.fieldId] && touched.customResponses?.[field.fieldId] && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[field.fieldId]}</p>
+                                  {errors.customResponses?.[fieldKey] && touched.customResponses?.[fieldKey] && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[fieldKey]}</p>
                                   )}
                                 </>
                               )}
@@ -812,8 +832,8 @@ const JobApplicationForm = () => {
                                       <span className="flex-1 text-sm font-medium text-light-900 dark:text-white select-none">{getLocalizedText(choice)}</span>
                                     </label>
                                   ))}
-                                  {errors.customResponses?.[field.fieldId] && touched.customResponses?.[field.fieldId] && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[field.fieldId]}</p>
+                                  {errors.customResponses?.[fieldKey] && touched.customResponses?.[fieldKey] && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[fieldKey]}</p>
                                   )}
                                 </div>
                               )}
@@ -848,7 +868,7 @@ const JobApplicationForm = () => {
                                           e.preventDefault();
                                           const value = e.target.value.trim();
                                           if (value) {
-                                            const currentTags = values.customResponses?.[field.fieldId] || [];
+                                            const currentTags = values.customResponses?.[fieldKey] || [];
                                             const tagsArray = Array.isArray(currentTags) ? currentTags : [];
                                             if (!tagsArray.includes(value)) {
                                               setFieldValue(fieldName, [...tagsArray, value]);
@@ -864,7 +884,7 @@ const JobApplicationForm = () => {
                                         const input = e.target.previousElementSibling;
                                         const value = input.value.trim();
                                         if (value) {
-                                          const currentTags = values.customResponses?.[field.fieldId] || [];
+                                          const currentTags = values.customResponses?.[fieldKey] || [];
                                           const tagsArray = Array.isArray(currentTags) ? currentTags : [];
                                           if (!tagsArray.includes(value)) {
                                             setFieldValue(fieldName, [...tagsArray, value]);
@@ -880,9 +900,9 @@ const JobApplicationForm = () => {
                                       {t('joinUs:addTag') || 'Add'}
                                     </button>
                                   </div>
-                                  {values.customResponses?.[field.fieldId] && Array.isArray(values.customResponses[field.fieldId]) && values.customResponses[field.fieldId].length > 0 && (
+                                  {values.customResponses?.[fieldKey] && Array.isArray(values.customResponses[fieldKey]) && values.customResponses[fieldKey].length > 0 && (
                                     <div className="flex flex-wrap gap-2 mb-2">
-                                      {values.customResponses[field.fieldId].map((tag, idx) => (
+                                      {values.customResponses[fieldKey].map((tag, idx) => (
                                         <div
                                           key={idx}
                                           className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-500/10 border-2 border-primary-500/30 rounded-full text-sm font-medium text-light-900 dark:text-white"
@@ -891,7 +911,7 @@ const JobApplicationForm = () => {
                                           <button
                                             type="button"
                                             onClick={() => {
-                                              const newTags = values.customResponses[field.fieldId].filter((_, i) => i !== idx);
+                                              const newTags = values.customResponses[fieldKey].filter((_, i) => i !== idx);
                                               setFieldValue(fieldName, newTags);
                                             }}
                                             className="hover:text-red-500 transition-colors"
@@ -907,8 +927,8 @@ const JobApplicationForm = () => {
                                   <p className="text-xs text-light-500 dark:text-light-400">
                                     {t('joinUs:tagsHint') || 'Press Enter or click Add button to add tags'}
                                   </p>
-                                  {errors.customResponses?.[field.fieldId] && touched.customResponses?.[field.fieldId] && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[field.fieldId]}</p>
+                                  {errors.customResponses?.[fieldKey] && touched.customResponses?.[fieldKey] && (
+                                    <p className="mt-1 text-sm text-red-500">{errors.customResponses[fieldKey]}</p>
                                   )}
                                 </div>
                               )}
