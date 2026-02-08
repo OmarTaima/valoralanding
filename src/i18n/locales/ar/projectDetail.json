@@ -9,7 +9,9 @@
 
   "loading": "جارٍ تحميل تفاصيل المشروع...",
   "notFound": "المشروع غير موجود",
+  "unitNotFound": "الوحدة غير موجودة",
   "backToProjects": "العودة إلى المشاريع",
+  "backToProject": "العودة إلى المشروع",
 
   "projectOverview": "نظرة عامة على المشروع",
   "keyFeatures": "الميزات الرئيسية",
@@ -19,6 +21,13 @@
   "flexiblePayment": "خطط دفع مرنة",
   "projectGallery": "معرض المشروع",
 
+  "unitDetails": "تفاصيل الوحدة",
+  "quickInfo": "معلومات سريعة",
+  "plans": "المخططات والعرض ثلاثي الأبعاد",
+  "layout": "التخطيط",
+  "type": "النوع",
+  "paymentPlan": "خطة الدفع",
+  "noImages": "لا توجد صور متاحة",
   "availableUnits": "الوحدات المتاحة",
   "noUnits": "لا توجد وحدات متاحة في الوقت الحالي.",
   "area": "المساحة",

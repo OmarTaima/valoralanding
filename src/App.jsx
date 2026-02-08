@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import Unit from "./pages/Unit";
 import Contact from "./pages/Contact";
 import JoinUs from "./pages/JoinUs";
 import JobApplicationForm from "./pages/JobApplicationForm";
@@ -27,6 +28,7 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="projects" element={<Projects />} />
             <Route path="projects/:slug" element={<ProjectDetail />} />
+            <Route path="unit/:unitId" element={<Unit />} />
             <Route path="contact" element={<Contact />} />
             <Route path="join-us" element={<JoinUs />} />
             <Route path="join-us/:slug" element={<JobApplicationForm />} />

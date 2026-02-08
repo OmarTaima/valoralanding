@@ -4,13 +4,23 @@ import { fetchJobPositions } from '../../api/jobPositionsApi';
 // Async thunk to fetch job positions
 export const getJobPositions = createAsyncThunk(
   'jobPositions/getJobPositions',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const data = await fetchJobPositions();
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
+  },
+  {
+    condition: (force = false, { getState }) => {
+      const { jobPositions } = getState();
+      // Allow force refresh or fetch if we don't have positions
+      if (force) return true;
+      if (jobPositions.positions.length > 0) {
+        return false;
+      }
+    },
   }
 );
 

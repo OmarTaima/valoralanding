@@ -9,7 +9,9 @@
 
   "loading": "Loading project details...",
   "notFound": "Project Not Found",
+  "unitNotFound": "Unit Not Found",
   "backToProjects": "Back to Projects",
+  "backToProject": "Back to Project",
 
   "projectOverview": "Project Overview",
   "keyFeatures": "Key Features",
@@ -19,6 +21,13 @@
   "flexiblePayment": "Flexible Payment Plans",
   "projectGallery": "Project Gallery",
 
+  "unitDetails": "Unit Details",
+  "quickInfo": "Quick Info",
+  "plans": "Plans & 3D",
+  "layout": "Layout",
+  "type": "Type",
+  "paymentPlan": "Payment Plan",
+  "noImages": "No images available",
   "availableUnits": "Available Units",
   "noUnits": "No units available at the moment.",
   "area": "Area",

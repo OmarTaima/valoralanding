@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { addLead } from "../api";
 import { useTranslation } from "../i18n/hooks/useTranslation";
@@ -9,6 +9,7 @@ import Footer from "../components/footer";
 const ProjectDetail = () => {
   const { slug } = useParams();
   const { t, isArabic } = useTranslation();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [activeImage, setActiveImage] = useState(0);
@@ -16,6 +17,7 @@ const ProjectDetail = () => {
   const [apiError, setApiError] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   // Contact form state for Interested section
   const [formData, setFormData] = useState({
     name: "",
@@ -460,6 +462,24 @@ const ProjectDetail = () => {
     }
   }, [slug]);
 
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowLeft") {
+        prevLightboxImage();
+      } else if (e.key === "ArrowRight") {
+        nextLightboxImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxOpen, lightboxIndex, project]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -491,14 +511,27 @@ const ProjectDetail = () => {
     );
   }
 
-  const openLightbox = (imageSrc) => {
+  const openLightbox = (imageSrc, index = 0) => {
     setLightboxImage(imageSrc);
+    setLightboxIndex(index);
     setLightboxOpen(true);
   };
 
   const closeLightbox = () => {
     setLightboxOpen(false);
     setLightboxImage("");
+  };
+
+  const nextLightboxImage = () => {
+    const nextIndex = (lightboxIndex + 1) % project.images.length;
+    setLightboxIndex(nextIndex);
+    setLightboxImage(project.images[nextIndex]);
+  };
+
+  const prevLightboxImage = () => {
+    const prevIndex = (lightboxIndex - 1 + project.images.length) % project.images.length;
+    setLightboxIndex(prevIndex);
+    setLightboxImage(project.images[prevIndex]);
   };
 
   return (
@@ -511,28 +544,56 @@ const ProjectDetail = () => {
         >
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-primary-300 transition-colors"
+            className="absolute top-4 right-4 text-white hover:text-primary-300 transition-colors z-10"
             aria-label="Close"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          
+          {/* Previous Button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); prevLightboxImage(); }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-colors z-10"
+            aria-label="Previous image"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
           <img
             src={lightboxImage}
             alt="Expanded view"
             className="max-w-full max-h-full object-contain"
             onClick={(e) => e.stopPropagation()}
           />
+          
+          {/* Next Button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); nextLightboxImage(); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-colors z-10"
+            aria-label="Next image"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          
+          {/* Image Counter */}
+          <div className="absolute bottom-4 right-4 bg-black/70 text-white px-4 py-2 rounded-full text-sm z-10">
+            {lightboxIndex + 1} / {project.images.length}
+          </div>
         </div>
       )}
 
       {/* Hero Section */}
       <div className="relative h-[70vh] md:h-[80vh] overflow-hidden">
         {/* Main Image */}
-        <div className="absolute inset-0 cursor-pointer" onClick={() => openLightbox(project.images[activeImage])}>
+        <div className="absolute inset-0 cursor-pointer" onClick={() => openLightbox(project.images[0], 0)}>
           <img
-            src={project.images[activeImage]}
+            src={project.images[0]}
             alt={project.title}
             className="w-full h-full object-cover"
           />
@@ -640,24 +701,6 @@ const ProjectDetail = () => {
             </div>
           </div>
         </div>
-
-        {/* Image Thumbnails */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="flex gap-2">
-            {project.images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveImage(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  activeImage === index
-                    ? "bg-primary-500 scale-125"
-                    : "bg-white/50 hover:bg-white/80"
-                }`}
-                aria-label={`View image ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Main Content */}
@@ -749,18 +792,19 @@ const ProjectDetail = () => {
                       {project.unitsList.map((unit, index) => (
                         <div
                           key={unit._id || index}
-                          className="glass rounded-2xl p-6 hover:transform hover:scale-[1.02] transition-all duration-300"
+                          onClick={() => navigate(`/unit/${unit._id}`, { state: { unit, projectSlug: project.slug, projectName: project.title, showPrices: project.showPrices } })}
+                          className="glass rounded-2xl p-6 hover:transform hover:scale-[1.02] transition-all duration-300 cursor-pointer"
                         >
                           {/* Unit Image */}
                           {unit.planViewImages && unit.planViewImages.length > 0 && (
                             <div 
-                              className="mb-4 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => openLightbox(unit.planViewImages[0])}
+                              className="mb-4 rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
                             >
                               <img
                                 src={unit.planViewImages[0]}
                                 alt={`Unit ${getLocalizedText(unit.layout)}`}
-                                className="w-full h-48 object-cover"
+                                className="w-full h-48 object-cover cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); openLightbox(unit.planViewImages[0]); }}
                               />
                             </div>
                           )}
@@ -1079,11 +1123,12 @@ const ProjectDetail = () => {
                     {t("projectDetail:projectGallery") || "Project Gallery"}
                   </h2>
 
+                  {/* Thumbnail Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {project.images.map((image, index) => (
                       <button
                         key={index}
-                        onClick={() => openLightbox(image)}
+                        onClick={() => openLightbox(image, index)}
                         className="relative overflow-hidden rounded-xl aspect-square group cursor-pointer"
                       >
                         <img

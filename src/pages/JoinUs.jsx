@@ -11,8 +11,10 @@ const JoinUs = () => {
   const { positions, loading, error } = useSelector((state) => state.jobPositions);
 
   useEffect(() => {
-    dispatch(getJobPositions());
-  }, [dispatch]);
+    if (positions.length === 0) {
+      dispatch(getJobPositions());
+    }
+  }, [dispatch, positions.length]);
 
   // Helper to get localized text
   const getLocalizedText = (field) => {
@@ -123,7 +125,7 @@ const JoinUs = () => {
               {error}
             </p>
             <button
-              onClick={() => dispatch(getJobPositions())}
+              onClick={() => dispatch(getJobPositions(true))}
               className="btn-primary"
             >
               {t('joinUs:retry') || 'Retry'}
