@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
 
 const Unit = () => {
   const { unitId } = useParams();
   const location = useLocation();
   const { t, isArabic } = useTranslation();
+  const dispatch = useDispatch();
+  const { rawProjects, loading: projectsLoading } = useSelector(
+    (state) => state.projects
+  );
   const [unit, setUnit] = useState(location.state?.unit || null);
   const [projectSlug, setProjectSlug] = useState(location.state?.projectSlug || "");
   const [projectName, setProjectName] = useState(location.state?.projectName || "");
@@ -27,23 +32,23 @@ const Unit = () => {
   };
 
   useEffect(() => {
-    const fetchUnit = async () => {
-      if (unit) return;
+    // Dispatch Redux action to fetch projects (Redux will handle caching)
+    if (!unit) {
+      dispatch(getProjects());
+    }
+  }, [dispatch, unit]);
+
+  useEffect(() => {
+    // Find the unit from Redux projects
+    if (projectsLoading) {
+      setIsLoading(true);
+      return;
+    }
+
+    if (rawProjects && rawProjects.length > 0 && !unit) {
       try {
-        setIsLoading(true);
-        setError(null);
-        const resp = await axios.get(`${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`, {
-          params: {
-            deleted: false,
-            company: import.meta.env.VITE_CRM_COMPANY_ID,
-            PageCount: 100,
-            page: 1,
-            sort: "-createdAt",
-          },
-        });
-        const projects = resp.data.data || [];
         let found = null;
-        for (const p of projects) {
+        for (const p of rawProjects) {
           if (!p.units) continue;
           const u = (p.units || []).find((x) => String(x._id) === String(unitId));
           if (u) {
@@ -51,24 +56,24 @@ const Unit = () => {
             break;
           }
         }
-          if (found) {
-            setUnit(found.unit);
-            setProjectSlug(found.project?.slug || "");
-            setProjectName(getLocalizedText(found.project?.name) || "");
-            setShowPrices(found.project?.showPrices ?? true);
+        if (found) {
+          setUnit(found.unit);
+          setProjectSlug(found.project?.slug || "");
+          setProjectName(getLocalizedText(found.project?.name) || "");
+          setShowPrices(found.project?.showPrices ?? true);
         } else {
           setError(t('projectDetail:unitNotFound') || "Unit not found");
         }
+        setIsLoading(false);
       } catch (err) {
         console.error(err);
-        setError(err.response?.data?.message || err.message || "Error fetching unit");
-      } finally {
+        setError(err.message || "Error processing unit");
         setIsLoading(false);
       }
-    };
-
-    fetchUnit();
-  }, [unitId, unit]);
+    } else if (!projectsLoading && !unit) {
+      setIsLoading(false);
+    }
+  }, [rawProjects, unitId, unit, projectsLoading, isArabic]);
 
   useEffect(() => {
     if (!unit) return;

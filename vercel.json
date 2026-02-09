@@ -4,6 +4,10 @@
     { "src": "package.json", "use": "@vercel/static-build" }
   ],
   "rewrites": [
+    { 
+      "source": "/api/v1/:path*", 
+      "destination": "https://sge-commerce.onrender.com/api/v1/:path*" 
+    },
     { "source": "^/(.*)", "destination": "/index.html" }
   ]
 }

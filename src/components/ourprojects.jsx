@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import { getProjects } from "../store/slices/projectsSlice";
 import alRabwaLogo from "../assets/logos/Al Rabwa.png";
 import alnorWAlbrkhLogo from "../assets/logos/Alnor w Albrkh.png";
 import alrehabLogo from "../assets/logos/Alrehab.png";
@@ -33,69 +34,20 @@ import { team } from "../data/team";
 
 const   OurProjects = () => {
   const { t, isArabic } = useTranslation();
+  const dispatch = useDispatch();
+  const { rawProjects, loading: apiLoading, error: apiError } = useSelector(
+    (state) => state.projects
+  );
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [visibleProjects, setVisibleProjects] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
-  // store raw API response once per page load
-  const [rawProjects, setRawProjects] = useState(null);
-  const [apiLoading, setApiLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
   const scrollRef = useRef(null);
 
-  // Fetch projects from API
-  // Fetch raw projects once per page load; do not refetch until refresh
+  // Fetch projects from Redux on component mount
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setApiLoading(true);
-
-        const response = await axios.get(
-          `${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`,
-          {
-            params: {
-              deleted: false,
-              company: import.meta.env.VITE_CRM_COMPANY_ID,
-              PageCount: 10,
-              page: 1,
-              sort: "-createdAt",
-            },
-          }
-        );
-
-        // store raw API data and map later (memoized) for localization
-        const data = response.data.data || [];
-        setRawProjects(data);
-        try {
-          sessionStorage.setItem("rawProjects", JSON.stringify(data));
-        } catch (e) {
-          // ignore sessionStorage errors (e.g., in private mode)
-        }
-
-        setApiError(null);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-        setApiError(error.response?.data?.message || error.message);
-        setRawProjects([]);
-      } finally {
-        setApiLoading(false);
-      }
-    };
-
-    // If we have cached data from this session, use it instead of fetching
-    try {
-      const cached = sessionStorage.getItem("rawProjects");
-      if (cached) {
-        setRawProjects(JSON.parse(cached));
-        setApiLoading(false);
-        return;
-      }
-    } catch (e) {
-      // ignore parsing errors and fall back to fetching
-    }
-
-    fetchProjects();
-  }, []); // run only once per page load
+    dispatch(getProjects());
+  }, [dispatch]);
 
   // Manual scroll handlers (used by left/right buttons)
   const scrollByAmount = () => {
@@ -121,8 +73,6 @@ const   OurProjects = () => {
     { id: "all", label: t("projects:all") || "All Projects" },
     { id: "residential", label: t("projects:residential") || "Residential" },
     { id: "commercial", label: t("projects:commercial") || "Commercial" },
-      { id: "completed", label: t("projects:completed") || "Completed" },
-    { id: "ongoing", label: t("projects:ongoing") || "Ongoing" },
   ];
 
   // Sorting options
@@ -257,9 +207,6 @@ const   OurProjects = () => {
   const filteredProjects = mappedProjects
     .filter((project) => {
       if (selectedFilter === "all") return true;
-      if (selectedFilter === "ongoing") return project.status === "ongoing";
-      if (selectedFilter === "completed") return project.status === "completed";
-      if (selectedFilter === "upcoming") return project.status === "upcoming";
       // check normalized category keys or type
       return (
         (project.categoryKeys && project.categoryKeys.includes(selectedFilter)) ||

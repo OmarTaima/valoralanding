@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { addLead } from "../api";
 import { useTranslation } from "../i18n/hooks/useTranslation";
+import { getProjects } from "../store/slices/projectsSlice";
 import cities from "../cities.json";
 import Footer from "../components/footer";
 
@@ -10,6 +12,10 @@ const ProjectDetail = () => {
   const { slug } = useParams();
   const { t, isArabic } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { rawProjects, loading: apiLoading, error: fetchError } = useSelector(
+    (state) => state.projects
+  );
   const [project, setProject] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [activeImage, setActiveImage] = useState(0);
@@ -179,48 +185,20 @@ const ProjectDetail = () => {
   ];
 
   useEffect(() => {
-    const fetchProjectDetails = async () => {
+    // Dispatch Redux action to fetch projects (Redux will handle caching)
+    dispatch(getProjects());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Find the project from Redux state
+    if (apiLoading) {
+      setIsLoading(true);
+      return;
+    }
+
+    if (rawProjects && rawProjects.length > 0) {
       try {
-        setIsLoading(true);
-        setApiError(null);
-
-        // Try to reuse cached raw projects from sessionStorage
-        let cached = null;
-        try {
-          const raw = sessionStorage.getItem("rawProjects");
-          if (raw) cached = JSON.parse(raw);
-        } catch (e) {
-          cached = null;
-        }
-
-        let foundProject = null;
-
-        if (cached && Array.isArray(cached)) {
-          foundProject = cached.find((p) => p.slug === slug);
-        }
-
-        // If not found in cache, fetch from API
-        if (!foundProject) {
-          const response = await axios.get(
-            `${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`,
-            {
-              params: {
-                deleted: false,
-                company: import.meta.env.VITE_CRM_COMPANY_ID,
-                PageCount: 100,
-                page: 1,
-                sort: "-createdAt",
-              },
-            }
-          );
-          foundProject = response.data.data?.find((p) => p.slug === slug);
-          // also update session cache so subsequent navigations reuse it
-          try {
-            sessionStorage.setItem("rawProjects", JSON.stringify(response.data.data || []));
-          } catch (e) {
-            // ignore
-          }
-        }
+        const foundProject = rawProjects.find((p) => p.slug === slug);
 
         if (foundProject) {
           // helpers to extract numeric area values and format
@@ -438,17 +416,18 @@ const ProjectDetail = () => {
           setProject(null);
           setApiError("Project not found");
         }
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching project details:", error);
-        setApiError(error.response?.data?.message || error.message);
+        console.error("Error processing project:", error);
+        setApiError(error.message);
         setProject(null);
-      } finally {
         setIsLoading(false);
       }
-    };
-
-    fetchProjectDetails();
-  }, [slug, isArabic]);
+    } else if (!apiLoading) {
+      // No projects loaded and not loading - might be an error
+      setIsLoading(false);
+    }
+  }, [rawProjects, slug, isArabic, apiLoading]);
 
   // Ensure we start at top when navigating to a project
   useEffect(() => {
