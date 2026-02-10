@@ -567,19 +567,6 @@ const ProjectDetail = () => {
   };
 
   const projectImageUrl = project?.images?.[0] ? getAbsoluteImageUrl(project.images[0]) : null;
-  
-  // Debug logging for OG image
-  useEffect(() => {
-    if (projectImageUrl) {
-      console.log('🖼️ Project OG Image URL:', projectImageUrl);
-      console.log('📋 Project Data:', {
-        title: project?.title,
-        slug: project?.slug,
-        imageUrl: projectImageUrl,
-        rawImage: project?.images?.[0]
-      });
-    }
-  }, [projectImageUrl, project]);
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">

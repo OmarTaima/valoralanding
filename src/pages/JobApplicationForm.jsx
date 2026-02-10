@@ -279,12 +279,10 @@ const JobApplicationForm = () => {
         customResponses: finalCustomResponses,
       };
 
-      console.log('Submitting to:', `${FORM_API_URL}/public/applicants`);
-      console.log('Payload:', payload);
+      
 
       const response = await axios.post(`${FORM_API_URL}/public/applicants`, payload);
 
-      console.log('Response:', response.data);
 
       await Swal.fire({
         icon: 'success',
