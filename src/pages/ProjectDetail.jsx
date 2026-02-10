@@ -563,10 +563,20 @@ const ProjectDetail = () => {
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="VALORA" />
         <meta property="og:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
         <meta property="og:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
-        {project?.images?.[0] && <meta property="og:image" content={project.images[0]} />}
-        <meta property="og:url" content={`https://valora-egypt.com/projects/${project?.slug || ''}`} />
+        <meta property="og:url" content={`https://valoralanding.vercel.app/projects/${project?.slug || ''}`} />
+        {project?.images?.[0] && (
+          <>
+            <meta property="og:image" content={project.images[0]} />
+            <meta property="og:image:secure_url" content={project.images[0]} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={`${project.title} - Premium Real Estate Project`} />
+            <meta property="og:image:type" content="image/jpeg" />
+          </>
+        )}
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
