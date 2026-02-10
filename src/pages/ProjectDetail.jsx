@@ -561,7 +561,7 @@ const ProjectDetail = () => {
         <title>{project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'}</title>
         <meta name="description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}. Premium real estate by VALORA.`} />
         
-        {/* Open Graph / Facebook */}
+        {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="VALORA" />
         <meta property="og:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
@@ -570,11 +570,13 @@ const ProjectDetail = () => {
         {project?.images?.[0] && (
           <>
             <meta property="og:image" content={project.images[0]} />
+            <meta property="og:image:url" content={project.images[0]} />
             <meta property="og:image:secure_url" content={project.images[0]} />
+            <meta property="og:image:type" content="image/jpeg" />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
-            <meta property="og:image:alt" content={`${project.title} - Premium Real Estate Project`} />
-            <meta property="og:image:type" content="image/jpeg" />
+            <meta property="og:image:alt" content={`${project.title} - Premium Real Estate Project by VALORA`} />
+            <meta name="image" property="og:image" content={project.images[0]} />
           </>
         )}
         
