@@ -555,6 +555,32 @@ const ProjectDetail = () => {
     setLightboxImage(project.images[prevIndex]);
   };
 
+  // Helper to ensure absolute image URL for social sharing
+  const getAbsoluteImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    // If already absolute URL, return as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    // If relative URL, make it absolute
+    return `${window.location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
+  const projectImageUrl = project?.images?.[0] ? getAbsoluteImageUrl(project.images[0]) : null;
+  
+  // Debug logging for OG image
+  useEffect(() => {
+    if (projectImageUrl) {
+      console.log('🖼️ Project OG Image URL:', projectImageUrl);
+      console.log('📋 Project Data:', {
+        title: project?.title,
+        slug: project?.slug,
+        imageUrl: projectImageUrl,
+        rawImage: project?.images?.[0]
+      });
+    }
+  }, [projectImageUrl, project]);
+
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
       <Helmet>
@@ -567,16 +593,16 @@ const ProjectDetail = () => {
         <meta property="og:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
         <meta property="og:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
         <meta property="og:url" content={`https://valoralanding.vercel.app/projects/${project?.slug || ''}`} />
-        {project?.images?.[0] && (
+        {projectImageUrl && (
           <>
-            <meta property="og:image" content={project.images[0]} />
-            <meta property="og:image:url" content={project.images[0]} />
-            <meta property="og:image:secure_url" content={project.images[0]} />
+            <meta property="og:image" content={projectImageUrl} />
+            <meta property="og:image:url" content={projectImageUrl} />
+            <meta property="og:image:secure_url" content={projectImageUrl} />
             <meta property="og:image:type" content="image/jpeg" />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
-            <meta property="og:image:alt" content={`${project.title} - Premium Real Estate Project by VALORA`} />
-            <meta name="image" property="og:image" content={project.images[0]} />
+            <meta property="og:image:alt" content={`${project?.title || 'Project'} - Premium Real Estate Project by VALORA`} />
+            <meta name="image" content={projectImageUrl} />
           </>
         )}
         
@@ -584,7 +610,7 @@ const ProjectDetail = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
         <meta name="twitter:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
-        {project?.images?.[0] && <meta name="twitter:image" content={project.images[0]} />}
+        {projectImageUrl && <meta name="twitter:image" content={projectImageUrl} />}
       </Helmet>
       {/* Lightbox Modal */}
       {lightboxOpen && (
