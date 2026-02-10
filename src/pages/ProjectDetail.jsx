@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Helmet } from "react-helmet-async";
 import axios from "axios";
+import Swal from "sweetalert2";
 import { addLead } from "../api";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
@@ -69,6 +71,31 @@ const ProjectDetail = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      console.debug('Form validation errors:', validationErrors);
+      
+      // Get the first error and scroll to it
+      const firstErrorKey = Object.keys(validationErrors)[0];
+      const firstErrorMessage = validationErrors[firstErrorKey];
+      
+      // Scroll to the error field
+      const errorElement = document.querySelector(`[name="${firstErrorKey}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          errorElement.focus();
+        }, 300);
+      }
+      
+      // Show alert after scroll
+      setTimeout(async () => {
+        await Swal.fire({
+          icon: 'warning',
+          title: t('contact:validationError') || 'Validation Error',
+          text: firstErrorMessage,
+          confirmButtonText: t('common:ok') || 'OK',
+          confirmButtonColor: '#f59e0b',
+        });
+      }, 300);
       return;
     }
     setIsSubmitting(true);
@@ -106,6 +133,14 @@ const ProjectDetail = () => {
 
       await addLead(payload);
 
+      await Swal.fire({
+        icon: 'success',
+        title: t('contact:successTitle') || 'Message Sent Successfully!',
+        text: t('contact:successMessage') || "Thank you for your interest. We'll get back to you within 24 hours.",
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#10b981',
+      });
+
       setSubmitSuccess(true);
       setFormData({
         name: "",
@@ -123,12 +158,18 @@ const ProjectDetail = () => {
           // ignore
         }
       }, 100);
-      setTimeout(() => setSubmitSuccess(false), 5000);
+      setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (err) {
-      console.error("Lead submit error:", err);
-      setErrors({
-        submit:
-          err?.response?.data?.message || t("contact:submitError") || "An error occurred. Please try again.",
+      console.debug("Lead submit error:", err);
+      console.debug("Error response:", err?.response?.data);
+      const errorMessage = err?.response?.data?.message || t("contact:submitError") || "An error occurred. Please try again.";
+      setErrors({ submit: errorMessage });
+      await Swal.fire({
+        icon: 'error',
+        title: t('contact:error') || 'Error',
+        text: errorMessage,
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#ef4444',
       });
     } finally {
       setIsSubmitting(false);
@@ -217,9 +258,9 @@ const ProjectDetail = () => {
           const formatArea = (num) => {
             if (num == null || num === "") return "N/A";
             try {
-              return `${parseInt(num).toLocaleString()} ${t("projectDetail:sqm") || "m²"}`;
+              return `${parseInt(num).toLocaleString()}`;
             } catch (e) {
-              return `${num} ${t("projectDetail:sqm") || "m²"}`;
+              return `${num}`;
             }
           };
           // build a robust embed URL for the map
@@ -371,7 +412,8 @@ const ProjectDetail = () => {
               ...(foundProject.planGallery || []).slice(0, 3),
             ].filter(Boolean),
             completion: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).getFullYear() : "TBD",
-            units: `${foundProject.availableUnits || "N/A"} ${t("projectDetail:units") || "وحدات"}`,
+            unitsNumber: foundProject.availableUnits || "N/A",
+            units: `${foundProject.availableUnits || "N/A"}`,
             unitsList: normalizedUnits,
             showPrices: !!foundProject.showPrices,
             features: foundProject.features?.map(f => getLocalizedText(f.name)).filter(Boolean) || [],
@@ -515,6 +557,23 @@ const ProjectDetail = () => {
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
+      <Helmet>
+        <title>{project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'}</title>
+        <meta name="description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}. Premium real estate by VALORA.`} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
+        <meta property="og:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
+        {project?.images?.[0] && <meta property="og:image" content={project.images[0]} />}
+        <meta property="og:url" content={`https://valora-egypt.com/projects/${project?.slug || ''}`} />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
+        <meta name="twitter:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
+        {project?.images?.[0] && <meta name="twitter:image" content={project.images[0]} />}
+      </Helmet>
       {/* Lightbox Modal */}
       {lightboxOpen && (
         <div 
@@ -648,7 +707,7 @@ const ProjectDetail = () => {
               </p>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {/* <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:col-span-2">
                   <div className="text-2xl font-bold text-white mb-1">
                     {project.price}
@@ -657,24 +716,21 @@ const ProjectDetail = () => {
                 </div> */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
-                    <span dir={isArabic ? "ltr" : undefined} className="inline-block">
-                      {project.sizeNumber || "-"}
-                    </span>
-                    <span className="ml-2 text-sm">{t("projectDetail:sqm") || "m²"}</span>
+                    {t("projectDetail:sqm", { value: project.size || project.sizeNumber || "-" })}
                   </div>
                   <div className="text-sm text-light-300">{t("projectDetail:unitSize") || "Unit Size"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
-                    {project.completion}
+                    {t("projectDetail:delivery", { value: project.completion })}
                   </div>
-                  <div className="text-sm text-light-300">Delivery</div>
+                  <div className="text-sm text-light-300">{t("projectDetail:deliveryLabel") || "Delivery"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
-                    {project.units}
+                    {t("projectDetail:totalUnits", { value: project.unitsNumber || project.units || "N/A" })}
                   </div>
-                  <div className="text-sm text-light-300">{t("projectDetail:totalUnits") || "وحدات"}</div>
+                  <div className="text-sm text-light-300">{t("projectDetail:units") || "Units"}</div>
                 </div>
               </div>
             </div>

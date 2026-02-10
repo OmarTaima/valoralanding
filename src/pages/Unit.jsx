@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Helmet } from "react-helmet-async";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
@@ -126,6 +127,13 @@ const Unit = () => {
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
+      <Helmet>
+        <title>{projectName ? `${layout || 'Unit'} - ${projectName} - VALORA` : 'Unit Details - VALORA'}</title>
+        <meta name="description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}. ${unit.type ? `Type: ${unit.type}` : ''}`} />
+        <meta property="og:title" content={projectName ? `${layout || 'Unit'} - ${projectName} - VALORA` : 'Unit Details - VALORA'} />
+        <meta property="og:description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}.`} />
+        {gallery?.[0] && <meta property="og:image" content={gallery[0]} />}
+      </Helmet>
       {/* Lightbox */}
       {lightboxOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={closeLightbox}>

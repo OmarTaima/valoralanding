@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import axios from "axios";
+import Swal from "sweetalert2";
 import { addLead } from "../api";
 import cities from "../cities.json";
 
@@ -50,8 +51,8 @@ const ContactUs = () => {
         </svg>
       ),
       title: t("contact:phoneTitle") || "Phone",
-      content: t("contact:phoneNumber") || "+2 010 2048 9251",
-      link: "tel:+201020489251",
+      content: t("contact:phoneNumber") || "17740",
+      link: "tel:17740",
     },
     {
       icon: (
@@ -60,8 +61,8 @@ const ContactUs = () => {
         </svg>
       ),
       title: t("contact:emailTitle") || "Email",
-      content: t("contact:emailAddress") || "info@valora-egypt.com",
-      link: "mailto:info@valora-egypt.com",
+      content: t("contact:emailAddress") || "info@valora-rs.com",
+      link: "mailto:info@valora-rs.com",
     },
     {
       icon: (
@@ -185,6 +186,31 @@ const ContactUs = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      console.debug('Form validation errors:', validationErrors);
+      
+      // Get the first error and scroll to it
+      const firstErrorKey = Object.keys(validationErrors)[0];
+      const firstErrorMessage = validationErrors[firstErrorKey];
+      
+      // Scroll to the error field
+      const errorElement = document.querySelector(`[name="${firstErrorKey}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          errorElement.focus();
+        }, 300);
+      }
+      
+      // Show alert after scroll
+      setTimeout(async () => {
+        await Swal.fire({
+          icon: 'warning',
+          title: t('contact:validationError') || 'Validation Error',
+          text: firstErrorMessage,
+          confirmButtonText: t('common:ok') || 'OK',
+          confirmButtonColor: '#f59e0b',
+        });
+      }, 300);
       return;
     }
 
@@ -224,16 +250,30 @@ const ContactUs = () => {
 
       await addLead(payload);
 
+      await Swal.fire({
+        icon: 'success',
+        title: t('contact:successTitle') || 'Message Sent Successfully!',
+        text: t('contact:successMessage') || "Thank you for contacting VALORA. We'll get back to you within 24 hours.",
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#10b981',
+      });
+
       setSubmitSuccess(true);
       setFormData({ name: "", email: "", city: "", phone: "", projectInterest: "", message: "" });
       setProject(null);
       setErrors({});
-      setTimeout(() => setSubmitSuccess(false), 5000);
+      setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (error) {
-      console.error("Form submission error:", error);
-      setErrors({
-        submit:
-          error?.response?.data?.message || t("contact:submitError") || "An error occurred. Please try again.",
+      console.debug("Form submission error:", error);
+      console.debug("Error response:", error?.response?.data);
+      const errorMessage = error?.response?.data?.message || t("contact:submitError") || "An error occurred. Please try again.";
+      setErrors({ submit: errorMessage });
+      await Swal.fire({
+        icon: 'error',
+        title: t('contact:error') || 'Error',
+        text: errorMessage,
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#ef4444',
       });
     } finally {
       setIsSubmitting(false);

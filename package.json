@@ -21,10 +21,12 @@
     "i18next-http-backend": "^3.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.4.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.10.1",
+    "sweetalert2": "^11.26.18",
     "swiper": "^12.0.3",
     "yup": "^1.7.1"
   },

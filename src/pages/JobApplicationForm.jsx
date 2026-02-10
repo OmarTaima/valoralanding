@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { Helmet } from 'react-helmet-async';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import toast, { Toaster } from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { getJobPositions } from '../store/slices/jobPositionsSlice';
 import valoraLogo from '../assets/logos/Valora Logo.png';
@@ -75,10 +76,25 @@ const JobApplicationForm = () => {
   const scrollToFirstError = (errors) => {
     const firstErrorKey = Object.keys(errors)[0];
     if (firstErrorKey) {
-      const errorElement = document.querySelector(`[name="${firstErrorKey}"]`) ||
+      let fieldName = firstErrorKey;
+      
+      // Handle nested errors (customResponses.fieldName)
+      if (firstErrorKey === 'customResponses' && typeof errors[firstErrorKey] === 'object') {
+        const nestedKey = Object.keys(errors[firstErrorKey])[0];
+        fieldName = `customResponses.${nestedKey}`;
+      }
+      
+      // Try to find the field by name attribute
+      const errorElement = document.querySelector(`[name="${fieldName}"]`) ||
+        document.querySelector(`[name="${firstErrorKey}"]`) ||
         document.querySelector(`[data-error="${firstErrorKey}"]`);
+      
       if (errorElement) {
         errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Focus the field after scrolling
+        setTimeout(() => {
+          errorElement.focus();
+        }, 300);
       }
     }
   };
@@ -123,7 +139,8 @@ const JobApplicationForm = () => {
       const response = await axios.post(uploadUrl, formData);
       return response.data.secure_url;
     } catch (error) {
-      console.error('Upload failed:', error.response?.data || error.message);
+      console.debug('Upload failed:', error.response?.data || error.message);
+      console.debug('Upload error details:', error);
       const serverMessage = error.response?.data?.error?.message || error.message;
       throw new Error(`File upload failed: ${serverMessage}`);
     }
@@ -140,35 +157,36 @@ const JobApplicationForm = () => {
 
   const createValidationSchema = () => {
     let schema = Yup.object().shape({
-      fullName: Yup.string().required(t('joinUs:required') || 'Required'),
+      fullName: Yup.string().required(`${t('joinUs:fullName') || 'Full Name'} ${t('joinUs:isRequired') || 'is required'}`),
       email: Yup.string()
         .email(t('joinUs:invalidEmail') || 'Invalid email')
-        .required(t('joinUs:required') || 'Required'),
+        .required(`${t('joinUs:email') || 'Email'} ${t('joinUs:isRequired') || 'is required'}`),
       phone: Yup.string()
         .matches(/^(\+\d{1,3}[- ]?)?\d{10,15}$/, t('joinUs:invalidPhone') || 'Invalid phone number')
-        .required(t('joinUs:required') || 'Required'),
-      address: Yup.string().required(t('joinUs:required') || 'Required'),
+        .required(`${t('joinUs:phone') || 'Phone'} ${t('joinUs:isRequired') || 'is required'}`),
+      address: Yup.string().required(`${t('joinUs:address') || 'Address'} ${t('joinUs:isRequired') || 'is required'}`),
       agreedToTerms: Yup.boolean()
         .oneOf([true], t('joinUs:acceptTerms') || 'You must accept the terms')
-        .required(t('joinUs:required') || 'Required'),
+        .required(t('joinUs:acceptTerms') || 'You must accept the terms'),
       customResponses: Yup.object(),
     });
 
     jobPosition?.customFields?.forEach((field) => {
       if (field.isRequired && field.inputType !== 'groupField' && field.inputType !== 'repeatable_group') {
         const fieldKey = getFieldKey(field);
+        const fieldLabel = getLocalizedText(field.label);
         if (field.inputType === 'tags') {
           schema = schema.shape({
             customResponses: Yup.object().shape({
               [fieldKey]: Yup.array()
-                .min(1, t('joinUs:required') || 'Required')
-                .required(t('joinUs:required') || 'Required'),
+                .min(1, `${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`)
+                .required(`${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`),
             }),
           });
         } else {
           schema = schema.shape({
             customResponses: Yup.object().shape({
-              [fieldKey]: Yup.mixed().required(t('joinUs:required') || 'Required'),
+              [fieldKey]: Yup.mixed().required(`${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`),
             }),
           });
         }
@@ -224,15 +242,23 @@ const JobApplicationForm = () => {
       let cvUrl = '';
 
       if (values.profilePhotoFile) {
-        toast.loading(t('joinUs:uploadingPhoto') || 'Uploading photo...', { id: 'photo' });
+        Swal.fire({
+          title: t('joinUs:uploadingPhoto') || 'Uploading photo...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
         profilePhotoUrl = await uploadToCloudinary(values.profilePhotoFile);
-        toast.success(t('joinUs:photoUploaded') || 'Photo uploaded!', { id: 'photo' });
+        Swal.close();
       }
 
       if (values.cvFile) {
-        toast.loading(t('joinUs:uploadingCV') || 'Uploading CV...', { id: 'cv' });
+        Swal.fire({
+          title: t('joinUs:uploadingCV') || 'Uploading CV...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
         cvUrl = await uploadToCloudinary(values.cvFile);
-        toast.success(t('joinUs:cvUploaded') || 'CV uploaded!', { id: 'cv' });
+        Swal.close();
       }
 
       // Use the base URL from env only
@@ -260,16 +286,25 @@ const JobApplicationForm = () => {
 
       console.log('Response:', response.data);
 
-      toast.success(response?.data?.message || t('joinUs:applicationSubmitted') || 'Application submitted successfully!', {
-        duration: 5000,
+      await Swal.fire({
+        icon: 'success',
+        title: t('joinUs:success') || 'Success!',
+        text: response?.data?.message || t('joinUs:applicationSubmitted') || 'Application submitted successfully!',
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#10b981',
       });
 
-      setTimeout(() => {
-        navigate('/join-us');
-      }, 3000);
+      navigate('/join-us');
     } catch (error) {
-      console.error('Error submitting application:', error);
-      toast.error(error.response?.data?.message || t('joinUs:submissionError') || 'Failed to submit application');
+      console.debug('Error submitting application:', error);
+      console.debug('Error response:', error.response?.data);
+      await Swal.fire({
+        icon: 'error',
+        title: t('joinUs:error') || 'Error',
+        text: error.response?.data?.message || t('joinUs:submissionError') || 'Failed to submit application',
+        confirmButtonText: t('common:ok') || 'OK',
+        confirmButtonColor: '#ef4444',
+      });
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
@@ -349,7 +384,11 @@ const JobApplicationForm = () => {
 
   return (
     <>
-      <Toaster position="top-center" />
+      <Helmet>
+        <title>{jobPosition ? `Apply for ${jobPosition.title || jobPosition.name} - VALORA` : 'Job Application - VALORA'}</title>
+        <meta name="description" content={jobPosition ? `Apply for the position of ${jobPosition.title || jobPosition.name} at VALORA.` : 'Submit your job application to join the VALORA team.'} />
+        <meta property="og:title" content={jobPosition ? `Apply for ${jobPosition.title || jobPosition.name} - VALORA` : 'Job Application - VALORA'} />
+      </Helmet>
       <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -453,13 +492,32 @@ const JobApplicationForm = () => {
                 setTouched(touchedFields, false);
 
                 if (Object.keys(formErrors).length > 0) {
-                  toast.error(t('joinUs:fixErrors') || 'Please fix the errors in the form', {
-                    duration: 4000,
-                  });
-                  console.log('Form Errors:', formErrors);
-                  setTimeout(() => {
-                    scrollToFirstError(formErrors);
-                  }, 100);
+                  console.debug('Form Errors:', formErrors);
+                  
+                  // Scroll to the error field first
+                  scrollToFirstError(formErrors);
+                  
+                  // Get the first error message (handle nested errors)
+                  let firstErrorMessage = '';
+                  const firstErrorKey = Object.keys(formErrors)[0];
+                  
+                  if (firstErrorKey === 'customResponses' && typeof formErrors[firstErrorKey] === 'object') {
+                    const nestedKey = Object.keys(formErrors[firstErrorKey])[0];
+                    firstErrorMessage = formErrors[firstErrorKey][nestedKey];
+                  } else {
+                    firstErrorMessage = formErrors[firstErrorKey];
+                  }
+                  
+                  // Show alert after a brief delay to allow scroll to complete
+                  setTimeout(async () => {
+                    await Swal.fire({
+                      icon: 'warning',
+                      title: t('joinUs:validationError') || 'Validation Error',
+                      text: firstErrorMessage,
+                      confirmButtonText: t('common:ok') || 'OK',
+                      confirmButtonColor: '#f59e0b',
+                    });
+                  }, 300);
                   return;
                 }
 

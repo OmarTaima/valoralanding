@@ -53,8 +53,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: "en",
-    lng: "en", // Default language
+    fallbackLng: "ar",
+    lng: "ar", // Default language
     supportedLngs: ["en", "ar"],
     defaultNS: "common",
     ns: [

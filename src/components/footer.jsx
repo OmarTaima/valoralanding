@@ -26,13 +26,13 @@ const Footer = () => {
   };
 
   const displayedYear = String(currentYear);
-  const rawPhone = t("contact:phoneNumber") || "+2 010 2048 9251";
+  const rawPhone = t("contact:phoneNumber") || "17740";
   // When Arabic is active, replace normal spaces with non-breaking spaces
   // so grouping (country code / blocks) doesn't reorder in RTL rendering.
   const displayedPhone = isArabic
     ? String(rawPhone).replace(/ /g, "\u00A0")
     : rawPhone; // keep ascii digits for phone and render LTR span
-  const rawEmail = t("contact:emailAddress") || "info@valora-egypt.com";
+  const rawEmail = t("contact:emailAddress") || "info@valora-rs.com";
   const registeredRaw =
     t("footer:registered") ||
     "VALORA Real Estate Development • Company Registration: 123456";
@@ -204,7 +204,7 @@ const Footer = () => {
                       {t("contact:phoneTitle") || "Phone"}
                     </p>
                     <a
-                      href="tel:+201020489251"
+                      href="tel:17740"
                       className="text-lg font-medium text-white hover:text-primary-300 transition-colors duration-200"
                     >
                       <span
@@ -215,7 +215,6 @@ const Footer = () => {
                       </span>
                     </a>
                     <p className="text-light-400 text-sm mt-1">
-                      {t("footer:callUs") || "Call us for inquiries"}
                     </p>
                   </div>
                 </div>
@@ -242,7 +241,7 @@ const Footer = () => {
                       {t("contact:emailTitle") || "Email"}
                     </p>
                     <a
-                      href="mailto:info@valora-egypt.com"
+                      href="mailto:info@valora-rs.com"
                       className="text-lg font-medium text-white hover:text-primary-300 transition-colors duration-200"
                     >
                       <span dir="ltr" className="inline-block">
@@ -250,7 +249,6 @@ const Footer = () => {
                       </span>
                     </a>
                     <p className="text-light-400 text-sm mt-1">
-                      {t("footer:emailUs") || "Email for general inquiries"}
                     </p>
                   </div>
                 </div>

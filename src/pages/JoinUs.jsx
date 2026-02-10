@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../i18n/hooks/useTranslation';
@@ -44,6 +45,12 @@ const JoinUs = () => {
 
   return (
     <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
+      <Helmet>
+        <title>Join Us - VALORA</title>
+        <meta name="description" content="Explore career opportunities at VALORA. Join our team and help shape the future of real estate in Egypt." />
+        <meta property="og:title" content="Join Us - VALORA" />
+        <meta property="og:description" content="Explore career opportunities at VALORA and join our growing team." />
+      </Helmet>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
