@@ -7,7 +7,16 @@
     { 
       "source": "/api/v1/:path*", 
       "destination": "https://sge-commerce.onrender.com/api/v1/:path*" 
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "cleanUrls": true
 }
