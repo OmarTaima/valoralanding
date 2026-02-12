@@ -123,9 +123,8 @@ async function generateProjectPages() {
       console.log(`✅ Generated: projects/${project.slug}/index.html`);
     }
     
-    console.log('\n🎉 Project pages generated successfully!');
   } catch (error) {
-    console.error('❌ Error generating project pages:', error.message);
+    console.error('❌ Error generating project pages:', error);
   }
 }
 
