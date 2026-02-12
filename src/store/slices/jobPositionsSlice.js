@@ -28,6 +28,7 @@ const jobPositionsSlice = createSlice({
   name: 'jobPositions',
   initialState: {
     positions: [],
+    company: null,
     loading: false,
     error: null,
     selectedPosition: null,
@@ -52,6 +53,7 @@ const jobPositionsSlice = createSlice({
       .addCase(getJobPositions.fulfilled, (state, action) => {
         state.loading = false;
         state.positions = action.payload.data?.jobs || [];
+        state.company = action.payload.data?.company || null;
         state.error = null;
       })
       .addCase(getJobPositions.rejected, (state, action) => {

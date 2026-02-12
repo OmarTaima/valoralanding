@@ -7,8 +7,8 @@ import Swal from "sweetalert2";
 import { addLead } from "../api";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
-import cities from "../cities.json";
 import Footer from "../components/footer";
+import { getAbsoluteImageUrl, getFullUrl, SITE_NAME } from "../utils/ogMeta";
 
 const ProjectDetail = () => {
   const { slug } = useParams();
@@ -26,10 +26,19 @@ const ProjectDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  
+  // Location data state
+  const [countries, setCountries] = useState([]);
+  const [governorates, setGovernorates] = useState([]);
+  const [allCities, setAllCities] = useState([]);
+  const [cities, setCities] = useState([]);
+  
   // Contact form state for Interested section
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    country: "",
+    government: "",
     city: "",
     phone: "",
     subject: "",
@@ -47,6 +56,23 @@ const ProjectDetail = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Handle cascading location dropdowns
+    if (name === "country") {
+      fetchGovernorates(value);
+    } else if (name === "government") {
+      // Filter cities based on selected government
+      const filteredCities = allCities.filter((city) => {
+        // Handle different possible property names from API
+        return city.government === value || 
+               city.governmentId === value || 
+               city.governorate === value || 
+               city.government?._id === value;
+      });
+      setCities(filteredCities);
+      setFormData((prev) => ({ ...prev, city: "" }));
+    }
+    
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -59,8 +85,8 @@ const ProjectDetail = () => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = t("contact:emailInvalid") || "Invalid email address";
     }
-    if (!formData.city || !formData.city.trim())
-      newErrors.city = t("contact:cityRequired") || "City is required";
+    if (!formData.country || !formData.country.trim())
+      newErrors.country = t("contact:countryRequired") || "Country is required";
     if (!formData.phone.trim())
       newErrors.phone = t("contact:phoneRequired") || "Phone is required";
     return newErrors;
@@ -114,7 +140,10 @@ const ProjectDetail = () => {
             deleted: false,
           },
         ],
-        city: formData.city || "",
+        country: formData.country || "",
+        // Only include government/city when provided to avoid validation errors
+        ...(formData.government ? { government: formData.government } : {}),
+        ...(formData.city ? { city: formData.city } : {}),
         subCategories: (project && project.subCategories && project.subCategories.length > 0)
           ? project.subCategories
           : [],
@@ -124,7 +153,8 @@ const ProjectDetail = () => {
         files: [],
         prevOrders: [],
         sales: [],
-        message: formData.message.trim() ? { message: formData.message.trim() } : { message: "" },
+        // Only include message when the user provided content
+        ...(formData.message && formData.message.trim() ? { message: { message: formData.message.trim() } } : {}),
         company: import.meta.env.VITE_CRM_COMPANY_ID,
         branch: import.meta.env.VITE_CRM_BRANCH_ID,
         deleted: false,
@@ -142,14 +172,22 @@ const ProjectDetail = () => {
       });
 
       setSubmitSuccess(true);
+      // Reset form but keep Egypt as default country
+      const egypt = countries.find((c) => c.name?.toLowerCase() === "egypt" || c.name?.toLowerCase() === "مصر");
       setFormData({
         name: "",
         email: "",
+        country: egypt?._id || "",
+        government: "",
+        city: "",
         phone: "",
         subject: "",
         projectInterest: "",
         message: "",
       });
+      if (egypt) {
+        fetchGovernorates(egypt._id);
+      }
       // ensure the success message is visible (scroll the form container into view)
       setTimeout(() => {
         try {
@@ -176,6 +214,80 @@ const ProjectDetail = () => {
     }
   };
 
+  // Fetch countries and cities on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/country/public`, {
+          params: {
+            deleted: false,
+            PageCount: 1000,
+            page: 1,
+          },
+        });
+
+        const countriesData = res.data.data || [];
+        setCountries(countriesData);
+
+        // Set default country to Egypt
+        const egypt = countriesData.find((c) => c.name?.toLowerCase() === "egypt" || c.name?.toLowerCase() === "مصر");
+        if (egypt) {
+          setFormData((prev) => ({ ...prev, country: egypt._id }));
+          // Fetch governorates for Egypt
+          fetchGovernorates(egypt._id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch countries:", err);
+      }
+    };
+
+    const fetchAllCities = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/city/public`, {
+          params: {
+            deleted: false,
+            PageCount: 1000,
+            page: 1,
+          },
+        });
+
+        setAllCities(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch cities:", err);
+      }
+    };
+
+    fetchCountries();
+    fetchAllCities();
+  }, []);
+
+  // Fetch governorates when country changes
+  const fetchGovernorates = async (countryId) => {
+    if (!countryId) {
+      setGovernorates([]);
+      setCities([]);
+      setFormData((prev) => ({ ...prev, government: "", city: "" }));
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/government/public`, {
+        params: {
+          deleted: false,
+          PageCount: 1000,
+          page: 1,
+          country: countryId,
+        },
+      });
+
+      setGovernorates(res.data.data || []);
+      setFormData((prev) => ({ ...prev, government: "", city: "" }));
+    } catch (err) {
+      console.error("Failed to fetch governorates:", err);
+      setGovernorates([]);
+    }
+  };
+
   // Helper to get localized text
   const getLocalizedText = (field) => {
     if (!field) return "";
@@ -184,6 +296,19 @@ const ProjectDetail = () => {
       return isArabic ? (field.ar || field.en || "") : (field.en || field.ar || "");
     }
     return "";
+  };
+
+  const getTypeLabel = (type) => {
+    if (!type) return "";
+    if (typeof type === "string") {
+      const key = String(type).toLowerCase();
+      const translated = t(`projects:${key}`);
+      return translated || type;
+    }
+    if (typeof type === "object") {
+      return getLocalizedText(type.name || type) || (type.en || type.ar || "");
+    }
+    return String(type);
   };
 
   // Robust location extractor mirroring OurProjects
@@ -409,7 +534,7 @@ const ProjectDetail = () => {
               foundProject.mainImage,
               ...(foundProject.exteriorGallery || []),
               ...(foundProject.interiorGallery || []),
-              ...(foundProject.planGallery || []).slice(0, 3),
+              ...(foundProject.planGallery || []),
             ].filter(Boolean),
             completion: foundProject.deliveryDate ? new Date(foundProject.deliveryDate).getFullYear() : "TBD",
             unitsNumber: foundProject.availableUnits || "N/A",
@@ -423,7 +548,14 @@ const ProjectDetail = () => {
               description: getLocalizedText(f.description) || ""
             })) || [],
             specifications: [
-              { label: "Project Type", value: foundProject.projectType?.join(", ") || "N/A" },
+              { label: t('projects:projectType') || "Project Type", value: (foundProject.projectType && Array.isArray(foundProject.projectType)) ? foundProject.projectType.map((pt) => {
+                  if (!pt) return null;
+                  if (typeof pt === 'string') {
+                    const key = String(pt).toLowerCase();
+                    return t(`projects:${key}`) || pt;
+                  }
+                  return getLocalizedText(pt.name || pt) || (pt.en || pt.ar || null);
+                }).filter(Boolean).join(', ') : (foundProject.projectType || "N/A") },
               { label: "Total Area", value: foundProject.area ? `${foundProject.area} m²` : "N/A" },
               { label: "Number of Floors", value: foundProject.numberOfFloors || "N/A" },
               { label: "Available Units", value: foundProject.availableUnits || "N/A" },
@@ -437,7 +569,7 @@ const ProjectDetail = () => {
             mapEmbedUrl: mapEmbedUrlVar,
             brochureUrl: "#",
             virtualTourUrl: "#",
-            contactPerson: "VALORA Sales Team",
+            contactPerson: t('projects:contactPerson') || "VALORA Sales Team",
             contactPhone: foundProject.phoneNumbers?.[0] || foundProject.company?.phones?.[0] || "+2 010 2048 9251",
             contactEmail: foundProject.company?.email || "info@valora-egypt.com",
             featured: false,
@@ -555,18 +687,8 @@ const ProjectDetail = () => {
     setLightboxImage(project.images[prevIndex]);
   };
 
-  // Helper to ensure absolute image URL for social sharing
-  const getAbsoluteImageUrl = (imageUrl) => {
-    if (!imageUrl) return null;
-    // If already absolute URL, return as is
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-    // If relative URL, make it absolute
-    return `${window.location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-  };
-
   const projectImageUrl = project?.images?.[0] ? getAbsoluteImageUrl(project.images[0]) : null;
+  const pageUrl = getFullUrl(`/projects/${project?.slug || slug}`);
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
@@ -576,10 +698,10 @@ const ProjectDetail = () => {
         
         {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="VALORA" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:title" content={project?.title ? `${project.title} - VALORA` : 'Project Details - VALORA'} />
         <meta property="og:description" content={project?.description || `Discover ${project?.title || 'this amazing project'} in ${project?.location || 'Egypt'}.`} />
-        <meta property="og:url" content={`https://valoralanding.vercel.app/projects/${project?.slug || ''}`} />
+        <meta property="og:url" content={pageUrl} />
         {projectImageUrl && (
           <>
             <meta property="og:image" content={projectImageUrl} />
@@ -704,10 +826,10 @@ const ProjectDetail = () => {
                 }`}
               >
                 {project.status === "completed"
-                  ? "Completed"
+                  ? t('projects:completed') || "Completed"
                   : project.status === "ongoing"
-                  ? "Under Construction"
-                  : "Upcoming"}
+                  ? t('projects:ongoing') || "Under Construction"
+                  : t('projects:upcoming') || "Upcoming"}
               </span>
             </div>
           </div>
@@ -718,8 +840,10 @@ const ProjectDetail = () => {
           <div className="container mx-auto px-4 md:px-6 pb-12">
             <div className="max-w-4xl">
               <div className="mb-6">
-                <span className="px-4 py-2 rounded-full bg-primary-500/20 backdrop-blur-sm border border-primary-500/30 text-primary-300 text-sm font-medium">
-                  {project.category.join(" • ")}
+                <span className={`project-tag px-4 py-2 bg-primary-500/20 backdrop-blur-sm border border-primary-500/30 text-primary-300 text-sm font-medium`}>
+                  {Array.isArray(project.category)
+                    ? project.category.map((c) => getTypeLabel(c)).filter(Boolean).join(" • ")
+                    : getTypeLabel(project.category)}
                 </span>
               </div>
 
@@ -872,8 +996,8 @@ const ProjectDetail = () => {
                           {/* Unit Type */}
                           <div className="mb-4">
                             <span className="px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-xs font-semibold">
-                              {unit.type}
-                            </span>
+                                {getTypeLabel(unit.type)}
+                              </span>
                           </div>
 
                           {/* Layout */}
@@ -886,7 +1010,7 @@ const ProjectDetail = () => {
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:area") || "Area"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.area} {t("projectDetail:sqm") || "m²"}
+                                {unit.area} {t("projectDetail:sqm2") || "m²"}
                               </span>
                             </div>
                             {project.showPrices && (
@@ -1353,17 +1477,79 @@ const ProjectDetail = () => {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">
+                        {t("contact:country") || "Country"} *
+                      </label>
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className={
+                          inputClass +
+                          (errors.country
+                            ? " border-danger-500 focus:border-danger-500 focus:ring-danger-500"
+                            : "")
+                        }
+                      >
+                        <option value="">{t("contact:selectCountry") || "Select a country"}</option>
+                        {countries.map((c) => (
+                          <option key={c._id} value={c._id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.country && (
+                        <p className="mt-2 text-sm text-danger-500">
+                          {errors.country}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        {t("contact:government") || "Governorate"} *
+                      </label>
+                      <select
+                        name="government"
+                        value={formData.government}
+                        onChange={handleChange}
+                        disabled={!formData.country}
+                        className={
+                          inputClass +
+                          (errors.government
+                            ? " border-danger-500 focus:border-danger-500 focus:ring-danger-500"
+                            : "") +
+                          " disabled:opacity-50 disabled:cursor-not-allowed"
+                        }
+                      >
+                        <option value="">{t("contact:selectGovernment") || "Select a governorate"}</option>
+                        {governorates.map((g) => (
+                          <option key={g._id} value={g._id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.government && (
+                        <p className="mt-2 text-sm text-danger-500">
+                          {errors.government}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
                         {t("contact:city") || "City"} *
                       </label>
                       <select
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
+                        disabled={!formData.government}
                         className={
                           inputClass +
                           (errors.city
                             ? " border-danger-500 focus:border-danger-500 focus:ring-danger-500"
-                            : "")
+                            : "") +
+                          " disabled:opacity-50 disabled:cursor-not-allowed"
                         }
                       >
                         <option value="">{t("contact:selectCity") || "Select a city"}</option>

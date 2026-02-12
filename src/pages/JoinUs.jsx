@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { getJobPositions } from '../store/slices/jobPositionsSlice';
+import { getFullUrl, getDefaultOgImage, SITE_NAME } from '../utils/ogMeta';
 
 const JoinUs = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { t, isArabic } = useTranslation();
+  const { t, isArabic, mapEmploymentType, mapWorkArrangement } = useTranslation();
   const { positions, loading, error } = useSelector((state) => state.jobPositions);
 
   useEffect(() => {
@@ -18,11 +19,26 @@ const JoinUs = () => {
   }, [dispatch, positions.length]);
 
   // Helper to get localized text
+  const extractStringFromRich = (val) => {
+    if (val == null) return '';
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val)) return val.map(extractStringFromRich).join(' ');
+    if (typeof val === 'object') {
+      if (typeof val.text === 'string') return val.text;
+      if (val.ops && Array.isArray(val.ops)) return val.ops.map((op) => (typeof op.insert === 'string' ? op.insert : '')).join('');
+      if (val.blocks && Array.isArray(val.blocks)) return val.blocks.map((b) => extractStringFromRich(b.text || b.data || b)).join('\n');
+      if (typeof val.html === 'string') return val.html.replace(/<[^>]+>/g, '');
+      return '';
+    }
+    return String(val);
+  };
+
   const getLocalizedText = (field) => {
     if (!field) return '';
     if (typeof field === 'string') return field;
     if (typeof field === 'object') {
-      return isArabic ? (field.ar || field.en || '') : (field.en || field.ar || '');
+      const localized = isArabic ? (field.ar || field.en || '') : (field.en || field.ar || '');
+      return extractStringFromRich(localized);
     }
     return '';
   };
@@ -43,13 +59,38 @@ const JoinUs = () => {
     navigate(`/join-us/${position.slug || position._id}`);
   };
 
+  const pageUrl = getFullUrl('/join-us');
+  const ogImage = getDefaultOgImage();
+  
   return (
     <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
       <Helmet>
         <title>Join Us - VALORA</title>
         <meta name="description" content="Explore career opportunities at VALORA. Join our team and help shape the future of real estate in Egypt." />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content="Join Us - VALORA" />
         <meta property="og:description" content="Explore career opportunities at VALORA and join our growing team." />
+        {ogImage && (
+          <>
+            <meta property="og:image" content={ogImage} />
+            <meta property="og:image:url" content={ogImage} />
+            <meta property="og:image:secure_url" content={ogImage} />
+            <meta property="og:image:type" content="image/png" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content="Careers at VALORA - Join Our Team" />
+          </>
+        )}
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Join Us - VALORA" />
+        <meta name="twitter:description" content="Explore career opportunities at VALORA and join our growing team." />
+        {ogImage && <meta name="twitter:image" content={ogImage} />}
       </Helmet>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -144,7 +185,6 @@ const JoinUs = () => {
         {!loading && !error && positions.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {positions
-              .filter((pos) => pos.isActive)
               .map((position) => (
                 <div
                   key={position._id}
@@ -153,9 +193,7 @@ const JoinUs = () => {
                 >
                   {/* Job Code Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-xs font-semibold">
-                      {position.jobCode}
-                    </span>
+                    
                     {position.salaryVisible && position.salary > 0 && (
                       <span className="text-success-500 font-semibold text-sm">
                         {position.salary.toLocaleString()} {t('joinUs:egp') || 'EGP'}
@@ -184,21 +222,28 @@ const JoinUs = () => {
                           d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                         />
                       </svg>
-                      <span>{position.employmentType || 'Full-time'}</span>
+                        <span className="flex items-center gap-2">
+                          <span>{mapEmploymentType(position.employmentType) || (isArabic ? 'دوام كامل' : 'Full-time')}</span>
+                          {position.workArrangement && (
+                            <span className="px-2 py-0.5 rounded-full bg-light-50 dark:bg-dark-800 text-xs font-medium text-light-700 dark:text-light-300">
+                              {mapWorkArrangement(position.workArrangement)}
+                            </span>
+                          )}
+                        </span>
                     </div>
 
                     {position.departmentId?.name && (
                       <div className="flex items-center gap-2 text-sm text-light-600 dark:text-light-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                        <span>{position.departmentId.name}</span>
-                      </div>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            />
+                          </svg>
+                          <span>{getLocalizedText(position.departmentId?.name)}</span>
+                        </div>
                     )}
 
                     <div className="flex items-center gap-2 text-sm text-light-600 dark:text-light-400">
@@ -216,7 +261,7 @@ const JoinUs = () => {
                     </div>
 
                     {position.registrationEnd && (
-                      <div className="flex items-center gap-2 text-sm text-warning-500">
+                      <div className="flex items-center gap-2 text-sm text-red-500">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             strokeLinecap="round"

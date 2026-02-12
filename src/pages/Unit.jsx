@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
+import { getAbsoluteImageUrl, getFullUrl, SITE_NAME } from "../utils/ogMeta";
 
 const Unit = () => {
   const { unitId } = useParams();
@@ -30,6 +31,19 @@ const Unit = () => {
     if (typeof field === "string") return field;
     if (typeof field === "object") return isArabic ? (field.ar || field.en || "") : (field.en || field.ar || "");
     return "";
+  };
+
+  const getTypeLabel = (type) => {
+    if (!type) return "";
+    if (typeof type === "string") {
+      const key = String(type).toLowerCase();
+      const translated = t(`projects:${key}`);
+      return translated || type;
+    }
+    if (typeof type === "object") {
+      return getLocalizedText(type) || (type.en || type.ar || "");
+    }
+    return String(type);
   };
 
   useEffect(() => {
@@ -124,15 +138,38 @@ const Unit = () => {
   const area = unit.area || unit.size || unit.areaNumber || "-";
   const layout = getLocalizedText(unit.layout) || unit.layout || "-";
   const features = unit.features || [];
+  const pageUrl = getFullUrl(`/unit/${unitId}`);
+  const unitImageUrl = gallery?.[0] ? getAbsoluteImageUrl(gallery[0]) : null;
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">
       <Helmet>
         <title>{projectName ? `${layout || 'Unit'} - ${projectName} - VALORA` : 'Unit Details - VALORA'}</title>
-        <meta name="description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}. ${unit.type ? `Type: ${unit.type}` : ''}`} />
+        <meta name="description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}. ${unit.type ? `Type: ${getTypeLabel(unit.type)}` : ''}`} />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content={projectName ? `${layout || 'Unit'} - ${projectName} - VALORA` : 'Unit Details - VALORA'} />
         <meta property="og:description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}.`} />
-        {gallery?.[0] && <meta property="og:image" content={gallery[0]} />}
+        {unitImageUrl && (
+          <>
+            <meta property="og:image" content={unitImageUrl} />
+            <meta property="og:image:url" content={unitImageUrl} />
+            <meta property="og:image:secure_url" content={unitImageUrl} />
+            <meta property="og:image:type" content="image/jpeg" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={`${layout || 'Unit'} in ${projectName || 'Project'} - VALORA`} />
+          </>
+        )}
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={projectName ? `${layout || 'Unit'} - ${projectName} - VALORA` : 'Unit Details - VALORA'} />
+        <meta name="twitter:description" content={`View details of ${layout || 'this unit'} in ${projectName || 'our project'}.`} />
+        {unitImageUrl && <meta name="twitter:image" content={unitImageUrl} />}
       </Helmet>
       {/* Lightbox */}
       {lightboxOpen && (
@@ -160,7 +197,7 @@ const Unit = () => {
             </Link>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-light-900 dark:text-white">{projectName || t('projectDetail:unitDetails') || 'Unit Details'}</h1>
-              <p className="text-sm text-light-600 dark:text-light-400">{layout} • {unit.type}</p>
+              <p className="text-sm text-light-600 dark:text-light-400">{layout} • {getTypeLabel(unit.type)}</p>
             </div>
           </div>
         </div>
@@ -188,7 +225,7 @@ const Unit = () => {
               <div className="p-4 md:p-6">
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl md:text-2xl font-bold text-light-900 dark:text-white">{layout}</h2>
-                  <span className="px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-sm font-semibold">{unit.type}</span>
+                  <span className="px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-sm font-semibold">{getTypeLabel(unit.type)}</span>
                 </div>
 
                 <p className="mt-3 text-light-700 dark:text-light-300">{unit.description || unit.notes || ''}</p>
@@ -254,7 +291,7 @@ const Unit = () => {
 
                   <div>
                     <div className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:type') || 'Type'}</div>
-                    <div className="font-semibold text-light-900 dark:text-white">{unit.type || '-'}</div>
+                    <div className="font-semibold text-light-900 dark:text-white">{getTypeLabel(unit.type) || '-'}</div>
                   </div>
                 </div>
               </div>

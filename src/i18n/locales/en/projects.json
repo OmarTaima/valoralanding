@@ -2,7 +2,9 @@
   "title": "Our Premium Projects",
   "subtitle": "Discover VALORA's portfolio of premium real estate developments, each crafted with exceptional quality and enduring value.",
   "tagline": "Premium Developments",
-
+ 
+  "metaHomeDescription": "Discover premium real estate projects in Egypt with VALORA. Browse exclusive Residential and Commercial properties in Cairo and beyond.",
+  "metaProjectsDescription": "Explore VALORA's portfolio of premium real estate projects in Egypt. Find your perfect Residential or Commercial property.",
   "all": "All Projects",
   "residential": "Residential",
   "commercial": "Commercial",
@@ -50,6 +52,10 @@
   "prestigeDesc": "Iconic twin towers offering premium office and residential spaces.",
   "oasisTitle": "OASIS Resort & Residences",
   "oasisDesc": "Luxury resort-style living with golf course access and premium amenities.",
+
+  "projectType": "Project Type",
+
+  "contactPerson": "VALORA Sales Team",
 
   "newCairo": "New Cairo, Egypt",
   "sodicWest": "SODIC West, Cairo",

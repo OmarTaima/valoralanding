@@ -3,22 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 import { Formik, Form, Field } from 'formik';
+import { Checkbox, FormHelperText } from '@mui/material';
 import * as Yup from 'yup';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { getJobPositions } from '../store/slices/jobPositionsSlice';
-import valoraLogo from '../assets/logos/Valora Logo.png';
+import valoraLogo from '../assets/logos/INSIDE LOGO.png';
+import { getFullUrl, getDefaultOgImage, SITE_NAME } from '../utils/ogMeta';
 
 const JobApplicationForm = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { t, isArabic } = useTranslation();
-  const { positions, loading } = useSelector((state) => state.jobPositions);
+  const { t, isArabic, mapEmploymentType, mapWorkArrangement } = useTranslation();
+  const { positions, loading, company } = useSelector((state) => state.jobPositions);
 
   const [repeatableGroups, setRepeatableGroups] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState({});
 
   const jobPosition = positions.find((pos) => pos.slug === slug);
 
@@ -30,6 +33,14 @@ const JobApplicationForm = () => {
 
   useEffect(() => {
     if (jobPosition) {
+      // initialize acceptedTerms map for per-term acceptance
+      const termsMap = {};
+      jobPosition.termsAndConditions?.forEach((t, i) => {
+        const id = t._id || `term_${i}`;
+        termsMap[id] = false;
+      });
+      setAcceptedTerms(termsMap);
+
       const groups = {};
       jobPosition.customFields
         ?.filter((field) => field.inputType === 'groupField' || field.inputType === 'repeatable_group')
@@ -54,11 +65,26 @@ const JobApplicationForm = () => {
       .replace(/\s+/g, '_'); // Replace spaces with underscores
   };
 
+  const extractStringFromRich = (val) => {
+    if (val == null) return '';
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val)) return val.map(extractStringFromRich).join(' ');
+    if (typeof val === 'object') {
+      if (typeof val.text === 'string') return val.text;
+      if (val.ops && Array.isArray(val.ops)) return val.ops.map((op) => (typeof op.insert === 'string' ? op.insert : '')).join('');
+      if (val.blocks && Array.isArray(val.blocks)) return val.blocks.map((b) => extractStringFromRich(b.text || b.data || b)).join('\n');
+      if (typeof val.html === 'string') return val.html.replace(/<[^>]+>/g, '');
+      return '';
+    }
+    return String(val);
+  };
+
   const getLocalizedText = (field) => {
     if (!field) return '';
     if (typeof field === 'string') return field;
     if (typeof field === 'object') {
-      return isArabic ? (field.ar || field.en || '') : (field.en || field.ar || '');
+      const localized = isArabic ? (field.ar || field.en || '') : (field.en || field.ar || '');
+      return extractStringFromRich(localized);
     }
     return '';
   };
@@ -84,16 +110,43 @@ const JobApplicationForm = () => {
         fieldName = `customResponses.${nestedKey}`;
       }
       
-      // Try to find the field by name attribute
-      const errorElement = document.querySelector(`[name="${fieldName}"]`) ||
-        document.querySelector(`[name="${firstErrorKey}"]`) ||
-        document.querySelector(`[data-error="${firstErrorKey}"]`);
+      // Special-case the profile photo input: scroll to its label for better UX
+      let errorElement = null;
+      if (fieldName === 'profilePhotoFile') {
+        errorElement = document.querySelector('label[for="profile-photo-upload"]') || document.getElementById('profile-photo-upload');
+      }
+
+      // Try to find the field by name attribute as fallback
+      if (!errorElement) {
+        errorElement = document.querySelector(`[name="${fieldName}"]`) ||
+          document.querySelector(`[name="${firstErrorKey}"]`) ||
+          document.querySelector(`[data-error="${firstErrorKey}"]`);
+      }
       
       if (errorElement) {
         errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         // Focus the field after scrolling
         setTimeout(() => {
-          errorElement.focus();
+          try {
+            // Make sure element is focusable (for labels) and visually highlighted so user stays there
+            if (errorElement && errorElement.setAttribute) {
+              errorElement.setAttribute('tabindex', '-1');
+              errorElement.classList.add('ring-4', 'ring-primary-500/30', 'ring-offset-2');
+            }
+            errorElement.focus && errorElement.focus();
+
+            // Keep the highlight and focus for a few seconds then clean up
+            setTimeout(() => {
+              try {
+                if (errorElement && errorElement.removeAttribute) {
+                  errorElement.removeAttribute('tabindex');
+                }
+                if (errorElement && errorElement.classList) {
+                  errorElement.classList.remove('ring-4', 'ring-primary-500/30', 'ring-offset-2');
+                }
+              } catch (e) {}
+            }, 4000);
+          } catch (e) { /* ignore */ }
         }, 300);
       }
     }
@@ -157,6 +210,11 @@ const JobApplicationForm = () => {
 
   const createValidationSchema = () => {
     let schema = Yup.object().shape({
+      profilePhotoFile: Yup.mixed().required(
+        isArabic
+          ? 'مطلوب رفع صوره'
+          : `${t('joinUs:photo') || 'Photo'} ${t('joinUs:isRequired') || 'is required'}`
+      ),
       fullName: Yup.string().required(`${t('joinUs:fullName') || 'Full Name'} ${t('joinUs:isRequired') || 'is required'}`),
       email: Yup.string()
         .email(t('joinUs:invalidEmail') || 'Invalid email')
@@ -286,8 +344,8 @@ const JobApplicationForm = () => {
 
       await Swal.fire({
         icon: 'success',
-        title: t('joinUs:success') || 'Success!',
-        text: response?.data?.message || t('joinUs:applicationSubmitted') || 'Application submitted successfully!',
+        title: t('joinUs:applicationSubmitted') || t('joinUs:success') || 'Success!',
+        text: t('joinUs:applicationSubmittedDesc') || response?.data?.message || 'Application submitted successfully!',
         confirmButtonText: t('common:ok') || 'OK',
         confirmButtonColor: '#10b981',
       });
@@ -380,12 +438,39 @@ const JobApplicationForm = () => {
     }, {}) || {},
   };
 
+  const pageUrl = getFullUrl(`/join-us/${slug}`);
+  const ogImage = getDefaultOgImage();
+  const jobTitle = jobPosition ? (jobPosition.title || jobPosition.name) : 'Position';
+  
   return (
     <>
       <Helmet>
-        <title>{jobPosition ? `Apply for ${jobPosition.title || jobPosition.name} - VALORA` : 'Job Application - VALORA'}</title>
-        <meta name="description" content={jobPosition ? `Apply for the position of ${jobPosition.title || jobPosition.name} at VALORA.` : 'Submit your job application to join the VALORA team.'} />
-        <meta property="og:title" content={jobPosition ? `Apply for ${jobPosition.title || jobPosition.name} - VALORA` : 'Job Application - VALORA'} />
+        <title>{jobPosition ? `Apply for ${jobTitle} - VALORA` : 'Job Application - VALORA'}</title>
+        <meta name="description" content={jobPosition ? `Apply for the position of ${jobTitle} at VALORA.` : 'Submit your job application to join the VALORA team.'} />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={jobPosition ? `Apply for ${jobTitle} - VALORA` : 'Job Application - VALORA'} />
+        <meta property="og:description" content={jobPosition ? `Join VALORA as ${jobTitle}. Apply now!` : 'Submit your job application to join the VALORA team.'} />
+        {ogImage && (
+          <>
+            <meta property="og:image" content={ogImage} />
+            <meta property="og:image:url" content={ogImage} />
+            <meta property="og:image:secure_url" content={ogImage} />
+            <meta property="og:image:type" content="image/png" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={`Apply for ${jobTitle} at VALORA`} />
+          </>
+        )}
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={jobPosition ? `Apply for ${jobTitle} - VALORA` : 'Job Application - VALORA'} />
+        <meta name="twitter:description" content={jobPosition ? `Join VALORA as ${jobTitle}. Apply now!` : 'Submit your job application to join the VALORA team.'} />
+        {ogImage && <meta name="twitter:image" content={ogImage} />}
       </Helmet>
       <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
         {/* Background Pattern */}
@@ -409,12 +494,45 @@ const JobApplicationForm = () => {
           {/* Job Header Card */}
           <div className="glass rounded-2xl p-8 mb-8 text-center">
             <img src={valoraLogo} alt="Valora Logo" className="w-48 mx-auto mb-6" />
+            {/* Company description (localized) and contact email below the logo */}
+            {(() => {
+              const companyDesc = getLocalizedText(jobPosition.companyId?.description || jobPosition.company?.description || company?.description);
+              const contactEmail = jobPosition.companyId?.contactEmail || jobPosition.companyId?.email || company?.contactEmail || company?.email || jobPosition.company?.contactEmail || jobPosition.company?.email || '';
+              return (
+                <div className="mb-4 text-center max-w-xl mx-auto">
+                  {companyDesc ? (
+                    <p className="text-lg text-light-600 dark:text-light-300 mb-2">{companyDesc}</p>
+                  ) : null}
+                  {contactEmail ? (
+                    <div>
+                      <a href={`mailto:${contactEmail}`} className="text-sm text-primary-500 font-semibold block">{contactEmail}</a>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })()}
+
             <h1 className="text-4xl font-bold text-primary-500 mb-4">
               {getLocalizedText(jobPosition.title)}
             </h1>
             <p className="text-light-600 dark:text-light-400 mb-3">
-              {jobPosition.companyId.name} • {jobPosition.departmentId?.name || ''}
+              {getLocalizedText(jobPosition.companyId?.name)} • {getLocalizedText(jobPosition.departmentId?.name) || ''}
             </p>
+            {(jobPosition.employmentType || jobPosition.workArrangement) && (
+              <div className={`flex items-center justify-center gap-3 mb-3 ${isArabic ? 'flex-row-reverse' : ''}`}>
+                {jobPosition.employmentType && (
+                  <span className="px-3 py-1 rounded-full bg-light-50 dark:bg-dark-800 text-sm font-medium text-light-700 dark:text-light-300">
+                    {mapEmploymentType(jobPosition.employmentType)}
+                  </span>
+                )}
+
+                {jobPosition.workArrangement && (
+                  <span className="px-3 py-1 rounded-full bg-light-50 dark:bg-dark-800 text-sm font-medium text-light-700 dark:text-light-300">
+                    {mapWorkArrangement(jobPosition.workArrangement)}
+                  </span>
+                )}
+              </div>
+            )}
             {jobPosition.salaryVisible && jobPosition.salary && (
               <p className="text-success-600 font-semibold mb-3">
                 {t('joinUs:salary') || 'Salary'}: {jobPosition.salary.toLocaleString()} {t('joinUs:egp') || 'EGP'}
@@ -429,6 +547,12 @@ const JobApplicationForm = () => {
                 {jobPosition.openPositions} {t('joinUs:openings') || 'openings'}
               </span>
             </div>
+            {Object.keys(acceptedTerms).length > 0 && Object.values(acceptedTerms).every(Boolean) && (
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-500/10 border border-success-500 text-success-600 text-sm font-semibold mx-auto">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                <span>{t('joinUs:termsApproved') || 'Terms approved'}</span>
+              </div>
+            )}
           </div>
 
           {/* Job Description */}
@@ -445,70 +569,61 @@ const JobApplicationForm = () => {
 
           {/* Job Specifications */}
           {jobPosition.jobSpecs && jobPosition.jobSpecs.length > 0 && (
-            <div className="mb-6 p-6 glass rounded-xl border-l-4 border-primary-600">
-              <h3 className="font-bold text-lg text-light-800 dark:text-white mb-4">
-                {t('joinUs:jobSpecs') || 'Job Specifications'}
-              </h3>
-              <div className="space-y-2">
-                {jobPosition.jobSpecs.map((spec, index) => (
-                  <div key={spec._id || index} className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </span>
-                    <span className="text-light-700 dark:text-light-300">
-                      {getLocalizedText(spec.spec)}
-                    </span>
-                  </div>
-                ))}
+            <div className="mb-8">
+              <div className="p-6 bg-light-50 dark:bg-dark-800 rounded-xl border-2 border-light-200 dark:border-dark-600">
+                <h3 className="font-bold text-lg text-light-800 dark:text-white mb-4">
+                  {t('joinUs:jobSpecs') || 'Job Specifications'}
+                </h3>
+                <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                  {jobPosition.jobSpecs.map((spec, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="shrink-0 w-5 h-5 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">{i + 1}</span>
+                      <span className="text-sm text-light-700 dark:text-light-300">{getLocalizedText(spec.spec || spec)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
-
-          {/* Application Form */}
+          
           <Formik
             initialValues={initialValues}
-            validationSchema={createValidationSchema}
+            validationSchema={createValidationSchema()}
             onSubmit={handleFormSubmit}
-            validateOnMount={false}
-            validateOnChange={false}
-            validateOnBlur={true}
           >
-            {({ values, errors, touched, handleChange, handleBlur, setFieldValue, setTouched, validateForm, isSubmitting: formikIsSubmitting }) => {
-              const handleSubmitWithScroll = async (e) => {
-                e.preventDefault();
-                const formErrors = await validateForm();
-                
-                const touchedFields = {};
-                Object.keys(values).forEach((key) => {
-                  touchedFields[key] = true;
-                });
-                if (values.customResponses) {
-                  Object.keys(values.customResponses).forEach((key) => {
-                    touchedFields[`customResponses.${key}`] = true;
-                  });
-                }
-                setTouched(touchedFields, false);
+            {(formikProps) => {
+              const { values, errors, touched, setFieldValue, isSubmitting: formikIsSubmitting, setTouched, validateForm, submitForm } = formikProps;
 
+              const handleSubmitWithScroll = async (e) => {
+                if (e && e.preventDefault) e.preventDefault();
+                const formErrors = await validateForm();
                 if (Object.keys(formErrors).length > 0) {
-                  console.debug('Form Errors:', formErrors);
-                  
-                  // Scroll to the error field first
                   scrollToFirstError(formErrors);
-                  
-                  // Get the first error message (handle nested errors)
+
+                  // derive first error message (handle nested customResponses)
                   let firstErrorMessage = '';
                   const firstErrorKey = Object.keys(formErrors)[0];
-                  
                   if (firstErrorKey === 'customResponses' && typeof formErrors[firstErrorKey] === 'object') {
                     const nestedKey = Object.keys(formErrors[firstErrorKey])[0];
                     firstErrorMessage = formErrors[firstErrorKey][nestedKey];
                   } else {
                     firstErrorMessage = formErrors[firstErrorKey];
                   }
-                  
-                  // Show alert after a brief delay to allow scroll to complete
-                  setTimeout(async () => {
-                    await Swal.fire({
+
+                  // mark touched for all error fields so validation messages appear
+                  const allTouched = {};
+                  const markTouched = (obj, prefix = '') => {
+                    Object.keys(obj || {}).forEach((k) => {
+                      const path = prefix ? `${prefix}.${k}` : k;
+                      allTouched[path] = true;
+                      if (typeof obj[k] === 'object' && !Array.isArray(obj[k])) markTouched(obj[k], path);
+                    });
+                  };
+                  markTouched(formErrors);
+                  setTouched(allTouched, false);
+
+                  setTimeout(() => {
+                    Swal.fire({
                       icon: 'warning',
                       title: t('joinUs:validationError') || 'Validation Error',
                       text: firstErrorMessage,
@@ -519,7 +634,7 @@ const JobApplicationForm = () => {
                   return;
                 }
 
-                handleFormSubmit(values, { setSubmitting: () => {} });
+                await submitForm();
               };
 
               return (
@@ -533,6 +648,7 @@ const JobApplicationForm = () => {
                     <input
                       type="file"
                       id="profile-photo-upload"
+                      name="profilePhotoFile"
                       accept="image/*"
                       hidden
                       onChange={(e) => {
@@ -569,6 +685,10 @@ const JobApplicationForm = () => {
                       <p className="text-sm text-center mt-3 text-light-700 dark:text-light-300 group-hover:text-primary-600 font-semibold transition-colors">
                         {values.profilePhotoFile ? t('joinUs:changePhoto') || 'Change Photo' : t('joinUs:uploadPhoto') || 'Upload Photo'}
                       </p>
+
+                      {errors.profilePhotoFile && touched.profilePhotoFile && (
+                        <p id="profile-photo-error" className="mt-2 text-sm text-red-500 text-center">{errors.profilePhotoFile}</p>
+                      )}
                     </label>
                   </div>
 
@@ -856,7 +976,7 @@ const JobApplicationForm = () => {
                                     className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200 cursor-pointer"
                                   >
                                     <option value="" disabled>
-                                      {t('joinUs:selectPlaceholder') || getLocalizedText(field.label)}
+                                      {t('contact:pleaseSelect') || getLocalizedText(field.label)}
                                     </option>
                                     {field.choices.map((choice, idx) => (
                                       <option key={idx} value={getLocalizedText(choice)}>
@@ -998,41 +1118,103 @@ const JobApplicationForm = () => {
                   {/* Terms and Conditions */}
                   {jobPosition.termsAndConditions && jobPosition.termsAndConditions.length > 0 && (
                     <div className="mb-8">
-                      <div className="p-6 bg-light-50 dark:bg-dark-800 rounded-xl border-2 border-light-200 dark:border-dark-600">
-                        <h3 className="font-bold text-lg text-light-800 dark:text-white mb-4">
-                          {t('joinUs:termsAndConditions') || 'Terms and Conditions'}
-                        </h3>
-                        <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-                          {jobPosition.termsAndConditions.map((term, index) => (
-                            <div key={term._id || index} className="flex items-start gap-2">
-                              <span className="shrink-0 w-5 h-5 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm text-light-700 dark:text-light-300">
-                                {getLocalizedText(term)}
-                              </span>
-                            </div>
-                          ))}
+                      <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm" dir={isArabic ? 'rtl' : 'ltr'}>
+                          <div className="border-l-4 border-primary-500 pl-4 mb-6">
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {t('joinUs:termsAndConditions') || 'Terms and Conditions'}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {t('joinUs:terms.instructions') || 'Please review and accept each term individually to proceed.'}
+                          </p>
                         </div>
-                        <label className="flex items-start gap-4 cursor-pointer group">
-                          <div className="relative flex items-center shrink-0 mt-0.5">
-                            <Field
-                              type="checkbox"
-                              name="agreedToTerms"
-                              className="sr-only peer"
-                            />
-                            <div className="w-6 h-6 rounded-lg bg-white dark:bg-dark-800 peer-checked:bg-primary-500 peer-focus:ring-4 peer-focus:ring-primary-500/20 transition-all duration-300 flex items-center justify-center group-hover:scale-105 peer-checked:[&>svg]:scale-100 shadow-md">
-                              <svg className="w-4 h-4 text-white scale-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                          <span className="flex-1 font-medium text-light-900 dark:text-white select-none">
-                            {t('joinUs:iAgree') || 'I agree to the terms and conditions'} <span className="text-red-500">*</span>
-                          </span>
-                        </label>
+
+                        <div className="space-y-3 mb-6 max-h-80 overflow-y-auto p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          {jobPosition.termsAndConditions.map((term, index) => {
+                            const termId = term._id || `term_${index}`;
+                            const isAccepted = !!acceptedTerms[termId];
+
+                            return (
+                              <div
+                                key={termId}
+                                className={`relative flex items-start p-4 rounded-lg border-2 transition-all duration-200 ${isAccepted ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:border-primaryLight hover:shadow-sm'}`}>
+                                <div className="flex items-center h-6 mt-0.5">
+                                  <Checkbox
+                                    checked={isAccepted}
+                                    onChange={(e) => {
+                                      const next = { ...acceptedTerms, [termId]: e.target.checked };
+                                      setAcceptedTerms(next);
+                                      setFieldValue('agreedToTerms', Object.values(next).every(Boolean));
+                                    }}
+                                    required
+                                    sx={{
+                                      color: 'var(--color-primary-500)',
+                                      padding: '4px',
+                                      '&.Mui-checked': { color: 'var(--color-primary-600)' },
+                                      '& .MuiSvgIcon-root': { fontSize: 24 },
+                                    }}
+                                  />
+                                </div>
+
+                                <div className={`flex-1 ${isArabic ? 'mr-3 text-right' : 'ml-3 text-left'}`}>
+                                  <label className="cursor-pointer">
+                                    <span className={`text-sm leading-relaxed block ${isAccepted ? 'text-green-900 font-medium' : 'text-gray-700'}`}>
+                                      <span className="font-semibold text-gray-900">{index + 1}.</span>{' '}
+                                      {getLocalizedText(term)}
+                                    </span>
+                                  </label>
+                                </div>
+
+                                {isAccepted && (
+                                  <div className="flex items-center h-6 mt-0.5">
+                                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-6">
+                          {(() => {
+                            const allAccepted = Object.keys(acceptedTerms).length > 0 && Object.values(acceptedTerms).every(Boolean);
+                            const acceptedCount = Object.values(acceptedTerms).filter(Boolean).length;
+                            const total = jobPosition.termsAndConditions.length;
+
+                            return (
+                              <div className={`flex items-center justify-between p-4 rounded-lg border-2 ${allAccepted ? 'bg-green-50 border-green-500' : 'bg-amber-50 border-amber-400'}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${allAccepted ? 'bg-green-500' : 'bg-amber-500'}`}>
+                                    {allAccepted ? (
+                                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                                    ) : (
+                                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/></svg>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className={`font-semibold ${allAccepted ? 'text-green-900' : 'text-amber-900'}`}>
+                                      {allAccepted ? t('joinUs:terms.allAccepted') || 'All terms accepted' : t('joinUs:terms.pending') || 'Pending acceptance'}
+                                    </p>
+                                    <p className={`text-sm ${allAccepted ? 'text-green-700' : 'text-amber-700'}`}>
+                                      {acceptedCount} {t('joinUs:terms.of') || 'of'} {total} {t('joinUs:terms.termsAccepted') || 'terms accepted'}
+                                    </p>
+                                  </div>
+                                </div>
+                                {allAccepted && (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 rounded-full">
+                                    <span className="text-xs font-bold text-green-800 uppercase tracking-wide">{t('joinUs:terms.ready') || 'Ready'}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+
                         {errors.agreedToTerms && touched.agreedToTerms && (
-                          <p className="mt-2 text-sm text-red-500">{errors.agreedToTerms}</p>
+                          <FormHelperText error sx={{ textAlign: isArabic ? 'right' : 'left', mt: 1 }}>
+                            {errors.agreedToTerms}
+                          </FormHelperText>
                         )}
                       </div>
                     </div>

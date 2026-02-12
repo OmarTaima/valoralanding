@@ -68,6 +68,15 @@
   "jobNotFoundDesc": "The job position you are looking for does not exist",
   "termsAndConditions": "Terms and Conditions",
   "iAgree": "I agree to the terms and conditions",
+  "termsApproved": "Terms approved",
+  "terms": {
+    "instructions": "Please review and accept each term individually to proceed.",
+    "allAccepted": "All terms accepted",
+    "pending": "Pending acceptance",
+    "of": "of",
+    "termsAccepted": "terms accepted",
+    "ready": "Ready"
+  },
   "addMore": "Add More",
   "remove": "Remove"
 }

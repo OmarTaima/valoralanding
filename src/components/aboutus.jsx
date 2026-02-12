@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "../i18n/hooks/useTranslation";
-import valoraLogo from "../assets/logos/Valora Logo.png";
+import valoraLogo from "../assets/logos/INSIDE LOGO.png";
 
 const AboutSection = () => {
   const { t, isArabic } = useTranslation();
@@ -119,11 +119,11 @@ const AboutSection = () => {
                   <img
                     src={valoraLogo}
                     alt="Valora Logo"
-                    className="h-24 w-auto object-contain"
+                    className="h-8 w-auto object-contain"
                   />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold text-light-900 dark:text-white mb-2">
+                  <h3 className="text-2xl font-bold text-primary-500 dark:text-white mb-2">
                     {t("about:brandMeaning") || "VALORA = Value + Aura"}
                   </h3>
                   <p className="text-light-600 dark:text-light-300 max-w-2xl">

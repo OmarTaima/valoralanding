@@ -160,9 +160,12 @@ const   OurProjects = () => {
       // normalize categories: display strings and key identifiers (lowercase English when available)
       const displayCategories = (project.projectType || []).map((c) => {
         if (!c) return "";
-        if (typeof c === "string") return c;
+        if (typeof c === "string") {
+          const key = String(c).toLowerCase().trim();
+          const translated = t(`projects:${key}`);
+          return translated || c;
+        }
         if (typeof c === "object") {
-          // prefer english name for display fallback to any text
           return getLocalizedText(c.name || c) || (c.en || c.ar || "");
         }
         return "";
@@ -177,6 +180,61 @@ const   OurProjects = () => {
         }
         return "";
       }).filter(Boolean);
+
+      // extract payment info: prefer project.payment, otherwise search units for any payment entry
+      let unitPaymentRaw = null;
+      if (project.payment) {
+        unitPaymentRaw = Array.isArray(project.payment) ? project.payment[0] : project.payment;
+      }
+      if (!unitPaymentRaw && Array.isArray(project.units)) {
+        for (const u of project.units) {
+          if (!u) continue;
+          if (u.payment) {
+            unitPaymentRaw = Array.isArray(u.payment) ? (u.payment[0] || null) : u.payment;
+            if (unitPaymentRaw) break;
+          }
+        }
+      }
+
+      // Parse deposit - handle percentage, decimal, or currency amount
+      let depositPercent = null;
+      if (unitPaymentRaw && unitPaymentRaw.deposit != null) {
+        const depositValue = Number(unitPaymentRaw.deposit);
+        if (!Number.isFinite(depositValue) || depositValue <= 0) {
+          depositPercent = null;
+        } else if (depositValue <= 1) {
+          // decimal like 0.35 -> 35%
+          depositPercent = Math.round(depositValue * 100);
+        } else if (depositValue <= 100) {
+          // already a percentage
+          depositPercent = Math.round(depositValue);
+        } else {
+          // deposit looks like a currency amount (e.g., 400000). Try to compute percent from unit price if available
+          const unitPriceRaw = project.units && project.units[0] && (project.units[0].price || project.units[0].pricePerMeter);
+          let computedPercent = null;
+          if (unitPriceRaw) {
+            const unitPrice = Number(project.units[0].price) || null;
+            if (unitPrice && Number.isFinite(unitPrice) && unitPrice > 0) {
+              computedPercent = Math.round((depositValue / unitPrice) * 100);
+            } else if (project.area && project.units[0].pricePerMeter) {
+              const ppm = Number(project.units[0].pricePerMeter);
+              const areaNum = Number(project.area) || null;
+              if (ppm && areaNum) {
+                const estUnitPrice = ppm * areaNum;
+                computedPercent = Math.round((depositValue / estUnitPrice) * 100);
+              }
+            }
+          }
+          if (computedPercent && computedPercent > 0 && computedPercent <= 100) {
+            depositPercent = computedPercent;
+          } else {
+            // fallback: if value is ridiculously large, treat as whole percent capped at 100
+            depositPercent = Math.min(100, Math.round(depositValue));
+          }
+        }
+      }
+
+      const numberOfInstallments = unitPaymentRaw && (unitPaymentRaw.numberOfInstallments != null) ? unitPaymentRaw.numberOfInstallments : null;
 
       return {
         id: project._id,
@@ -199,9 +257,11 @@ const   OurProjects = () => {
         units: project.availableUnits || "N/A",
         features: project.features?.map((f) => getLocalizedText(f.name)) || [],
         featured: false,
+        depositPercent,
+        numberOfInstallments,
       };
     });
-  }, [rawProjects, isArabic]);
+  }, [rawProjects, isArabic, t]);
 
   // Filter and sort projects
   const filteredProjects = mappedProjects
@@ -394,7 +454,7 @@ const   OurProjects = () => {
         {/* Projects Grid */}
         {!apiLoading && !apiError && (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-8 mb-16">
           {projectsToShow.map((project) => (
             <ProjectCard
               key={project.id}
@@ -586,20 +646,20 @@ const ProjectCard = ({ project, isArabic }) => {
     <Link to={`/projects/${project.slug}`} className="block">
       <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
         {/* Status Badge */}
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 left-4 z-20">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold shadow-sm ${
               project.status === "completed"
-                ? "bg-success-500/20 text-success-500"
+                ? "bg-secondary-50 text-primary-500"
                 : project.status === "ongoing"
-                ? "bg-warning-500/20 text-warning-500"
-                : "bg-info-500/20 text-info-500"
+                ? "bg-secondary-50 text-primary-500"
+                : "bg-secondary-50 text-primary-500"
             }`}
           >
             {project.status === "completed"
               ? t("projects:completed") || "Completed"
               : project.status === "ongoing"
-              ? t("projects:ongoing") || "Ongoing"
+              ? t("projects:ongoing") || (isArabic ? "تحت الإنشاء" : "Under Construction")
               : t("projects:upcoming") || "Upcoming"}
           </span>
         </div>
@@ -614,32 +674,51 @@ const ProjectCard = ({ project, isArabic }) => {
         )}
 
         {/* Image */}
-        <div className="h-64 overflow-hidden">
+        <div className="h-64 overflow-hidden relative">
           <img
             src={project.image}
             alt={project.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 z-25 "
             loading="lazy"
           />
           <div className="absolute inset-0 bg-linear-to-t from-dark-900/60 via-transparent to-transparent" />
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          {/* Category Tags */}
+        <div className="p-6 relative">
+          {/* Payment Badges */}
+          {(project.depositPercent != null || project.numberOfInstallments != null) && (
+            <div className="payment-badges">
+              {project.depositPercent != null && (
+                <div className="payment-badge badge-font-md badge-font-mobile">
+                  <div className="badge-label">{isArabic ? "مقــدم" : "Deposit"}</div>
+                  <div className="badge-value">{project.depositPercent}%</div>
+                </div>
+              )}
+
+              {project.numberOfInstallments != null && (
+                <div className="payment-badge badge-font-md badge-font-mobile">
+                  <div className="badge-label">{isArabic ? "تقسيط" : "Installment"}</div>
+                  <div className="badge-label">{isArabic ? "حتــــــــي" : "Installment"}</div>
+                  <div className="badge-sub">{project.numberOfInstallments} {isArabic ? `شهر` : `mo`}</div>
+                </div>
+              )}
+            </div>
+          )}
+          
+{/* Category Tags */}
           <div className="flex flex-wrap gap-2 mb-3">
             {project.category.map((cat, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-light-100 dark:bg-dark-700 text-light-600 dark:text-light-400 text-xs rounded"
+                className={`project-tag bg-light-100 dark:bg-dark-700 text-light-600 dark:text-light-400`}
               >
                 {cat}
               </span>
             ))}
           </div>
-
           {/* Title & Location */}
-          <h3 className="text-xl font-bold text-light-900 dark:text-white mb-2 group-hover:text-primary-500 transition-colors">
+          <h3 className="text-xl font-bold text-primary-500 dark:text-white mb-2 group-hover:text-primary-500 transition-colors">
             {project.title}
           </h3>
 

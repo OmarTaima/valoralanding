@@ -3,10 +3,10 @@ import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "../i18n/hooks/useTranslation";
 import LanguageSwitcher from "../i18n/components/LanguageSwitcher";
 import { path } from "framer-motion/client";
-import valoraLogo from "../assets/logos/Valora Logo.png";
+import valoraLogo from "../assets/logos/MAIN LOGO.png";
 
 const Navbar = () => {
-  const { t } = useTranslation();
+  const { t, isArabic } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
@@ -63,7 +63,9 @@ const Navbar = () => {
                 </NavLink>
               )
             )}
-            <LanguageSwitcher className="btn-outline" />
+            <div className="ml-4" style={{ marginRight: isArabic ? '2rem' : undefined }}>
+              <LanguageSwitcher className="btn-outline " />
+            </div>
           </div>
 
           {/* Mobile controls */}

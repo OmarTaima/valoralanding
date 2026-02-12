@@ -3,7 +3,6 @@ import { useTranslation } from "../i18n/hooks/useTranslation";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { addLead } from "../api";
-import cities from "../cities.json";
 
 const ContactUs = () => {
   const { t, isArabic } = useTranslation();
@@ -13,9 +12,17 @@ const ContactUs = () => {
     { value: "", label: t("contact:selectProject") || "Select project" },
   ]);
 
+  // Location data state
+  const [countries, setCountries] = useState([]);
+  const [governorates, setGovernorates] = useState([]);
+  const [allCities, setAllCities] = useState([]);
+  const [cities, setCities] = useState([]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    country: "",
+    government: "",
     city: "",
     phone: "",
     projectInterest: "",
@@ -76,6 +83,80 @@ const ContactUs = () => {
     },
   ];
 
+  // Fetch countries and cities on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/country/public`, {
+          params: {
+            deleted: false,
+            PageCount: 1000,
+            page: 1,
+          },
+        });
+
+        const countriesData = res.data.data || [];
+        setCountries(countriesData);
+
+        // Set default country to Egypt
+        const egypt = countriesData.find((c) => c.name?.toLowerCase() === "egypt" || c.name?.toLowerCase() === "مصر");
+        if (egypt) {
+          setFormData((prev) => ({ ...prev, country: egypt._id }));
+          // Fetch governorates for Egypt
+          fetchGovernorates(egypt._id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch countries:", err);
+      }
+    };
+
+    const fetchAllCities = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/city/public`, {
+          params: {
+            deleted: false,
+            PageCount: 1000,
+            page: 1,
+          },
+        });
+
+        setAllCities(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch cities:", err);
+      }
+    };
+
+    fetchCountries();
+    fetchAllCities();
+  }, []);
+
+  // Fetch governorates when country changes
+  const fetchGovernorates = async (countryId) => {
+    if (!countryId) {
+      setGovernorates([]);
+      setCities([]);
+      setFormData((prev) => ({ ...prev, government: "", city: "" }));
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_LOCATION_API_URL}/government/public`, {
+        params: {
+          deleted: false,
+          PageCount: 1000,
+          page: 1,
+          country: countryId,
+        },
+      });
+
+      setGovernorates(res.data.data || []);
+      setFormData((prev) => ({ ...prev, government: "", city: "" }));
+    } catch (err) {
+      console.error("Failed to fetch governorates:", err);
+      setGovernorates([]);
+    }
+  };
+
   // Fetch projects once on mount and handle slug-based preselection
   useEffect(() => {
     const fetchProjects = async () => {
@@ -132,6 +213,22 @@ const ContactUs = () => {
       [name]: value,
     }));
 
+    // Handle cascading location dropdowns
+    if (name === "country") {
+      fetchGovernorates(value);
+    } else if (name === "government") {
+      // Filter cities based on selected government
+      const filteredCities = allCities.filter((city) => {
+        // Handle different possible property names from API
+        return city.government === value || 
+               city.governmentId === value || 
+               city.governorate === value || 
+               city.government?._id === value;
+      });
+      setCities(filteredCities);
+      setFormData((prev) => ({ ...prev, city: "" }));
+    }
+
     // if user selected a project, set the project state to the selected project's details
     if (name === "projectInterest") {
       const found = projectsList.find((p) => p._id === value);
@@ -169,8 +266,8 @@ const ContactUs = () => {
       newErrors.email = t("contact:emailInvalid") || "Invalid email address";
     }
 
-    if (!formData.city || !formData.city.trim()) {
-      newErrors.city = t("contact:cityRequired") || "City is required";
+    if (!formData.country || !formData.country.trim()) {
+      newErrors.country = t("contact:countryRequired") || "Country is required";
     }
 
     if (!formData.phone.trim()) {
@@ -233,7 +330,10 @@ const ContactUs = () => {
             deleted: false,
           },
         ],
-        city: formData.city || "",
+        country: formData.country || "",
+        // Only include government/city when provided to avoid validation errors
+        ...(formData.government ? { government: formData.government } : {}),
+        ...(formData.city ? { city: formData.city } : {}),
         subCategories: (project && project.subCategories && project.subCategories.length > 0) ? project.subCategories : [],
         campaigns: [],
         channels: [],
@@ -241,7 +341,8 @@ const ContactUs = () => {
         files: [],
         prevOrders: [],
         sales: [],
-        message: formData.message.trim() ? { message: formData.message.trim() } : { message: "" },
+        // Only include message when the user provided content
+        ...(formData.message && formData.message.trim() ? { message: { message: formData.message.trim() } } : {}),
         company: import.meta.env.VITE_CRM_COMPANY_ID,
         branch: import.meta.env.VITE_CRM_BRANCH_ID,
         deleted: false,
@@ -259,7 +360,21 @@ const ContactUs = () => {
       });
 
       setSubmitSuccess(true);
-      setFormData({ name: "", email: "", city: "", phone: "", projectInterest: "", message: "" });
+      // Reset form but keep Egypt as default country
+      const egypt = countries.find((c) => c.name?.toLowerCase() === "egypt" || c.name?.toLowerCase() === "مصر");
+      setFormData({ 
+        name: "", 
+        email: "", 
+        country: egypt?._id || "", 
+        government: "", 
+        city: "", 
+        phone: "", 
+        projectInterest: "", 
+        message: "" 
+      });
+      if (egypt) {
+        fetchGovernorates(egypt._id);
+      }
       setProject(null);
       setErrors({});
       setTimeout(() => setSubmitSuccess(false), 3000);
@@ -359,6 +474,16 @@ const ContactUs = () => {
                     link: "https://www.linkedin.com/company/valorarealestate",
                     color: "bg-blue-700 hover:bg-blue-800",
                   },
+                  {
+                    name: "TikTok",
+                    icon: (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                      </svg>
+                    ),
+                    link: "https://www.tiktok.com/@valorarealestate.eg",
+                    color: "bg-black hover:bg-neutral-800",
+                  },
                 ].map((social, index) => (
                   social.link ? (
                     <a key={index} href={social.link} target="_blank" rel="noopener noreferrer" className={`${social.color} text-white w-12 h-12 rounded-xl flex items-center justify-center transition-transform hover:scale-110`} aria-label={`Follow us on ${social.name}`}>
@@ -409,8 +534,31 @@ const ContactUs = () => {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
+                      <label htmlFor="country" className="form-label block mb-2">{t("contact:country") || "Country"} *</label>
+                      <select id="country" name="country" value={formData.country} onChange={handleChange} className={`${inputClass} ${errors.country ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""}`}>
+                        <option value="">{t("contact:selectCountry") || "Select a country"}</option>
+                        {countries.map((c) => (
+                          <option key={c._id} value={c._id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {errors.country && <p className="mt-2 text-sm text-danger-500">{errors.country}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="government" className="form-label block mb-2">{t("contact:government") || "Governorate"} *</label>
+                      <select id="government" name="government" value={formData.government} onChange={handleChange} disabled={!formData.country} className={`${inputClass} ${errors.government ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                        <option value="">{t("contact:selectGovernment") || "Select a governorate"}</option>
+                        {governorates.map((g) => (
+                          <option key={g._id} value={g._id}>{g.name}</option>
+                        ))}
+                      </select>
+                      {errors.government && <p className="mt-2 text-sm text-danger-500">{errors.government}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
                       <label htmlFor="city" className="form-label block mb-2">{t("contact:city") || "City"} *</label>
-                      <select id="city" name="city" value={formData.city} onChange={handleChange} className={`${inputClass} ${errors.city ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""}`}>
+                      <select id="city" name="city" value={formData.city} onChange={handleChange} disabled={!formData.government} className={`${inputClass} ${errors.city ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
                         <option value="">{t("contact:selectCity") || "Select a city"}</option>
                         {cities.map((c) => (
                           <option key={c._id} value={c._id}>{c.name}</option>

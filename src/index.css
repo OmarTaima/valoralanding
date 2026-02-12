@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700&display=swap');
 @import "tailwindcss";
 
 /* RTL + Dark Mode Support */
@@ -16,14 +17,14 @@
   --color-primary-200: #92ffdd;
   --color-primary-300: #5ff5c8;
   --color-primary-400: #30e9b6;
-  --color-primary-500: #0b5943; /* MAIN BRAND GREEN */
+  --color-primary-500: #286a4e; /* MAIN BRAND GREEN */
   --color-primary-600: #14a57d;
   --color-primary-700: #0f7b5d;
   --color-primary-800: #0b5943;
   --color-primary-900: #073c2d;
 
   /* --- Secondary Deep Tone (Luxury) --- */
-  --color-secondary-50: #e7efed;
+  --color-secondary-50: #eaecde;
   --color-secondary-100: #cfdcd9;
   --color-secondary-200: #9eb9b3;
   --color-secondary-300: #6c968d;
@@ -61,7 +62,7 @@
   /* --- Action / Status Colors (refined for luxury real estate) --- */
   --color-success-500: #22c55e;
   --color-warning-500: #facc15;
-  --color-danger-500: #dc2626;
+  --color-danger-500: var(--color-primary-500);
   --color-info-500: #3b82f6;
 }
 
@@ -116,6 +117,118 @@
   .card {
     @apply bg-white dark:bg-dark-800 border border-light-200 dark:border-dark-700 
            rounded-xl p-6 shadow-md transition-colors;
+  }
+
+  /* Project category tag - consistent size and Alexandria font */
+  .project-tag {
+    font-family: 'Alexandria', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    height: 34px;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem; /* 13px */
+    font-weight: 600;
+    border-radius: 0.375rem; /* rounded */
+    line-height: 1;
+  }
+
+  /* Payment badges used on project cards */
+  .payment-badges {
+    position: absolute;
+    top: -2px; /* nudged so badges barely touch the image above */
+    left: 1rem;
+    z-index: 20;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .payment-badge {
+    background: #286a4e;
+    color: white;
+    width: 90px;
+    height: 130px; /* taller badge */
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    font-family: 'Alexandria', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    transform: translateY(2px); /* small nudge to reduce overlap */
+    pointer-events: auto;
+  }
+
+  .payment-badge .badge-deposit {
+    font-size: 23px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+.payment-badge .badge-label  {
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .payment-badge .badge-value {
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .payment-badge .badge-sub {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    margin-top: 6px;
+  }
+
+  /* Utility classes to explicitly control badge font sizes per breakpoint
+     - add both classes to the badge element: .badge-font-md .badge-* and .badge-font-mobile .badge-*
+     media queries will ensure the correct sizes apply. */
+  .badge-font-md .badge-label { font-size: 20px; }
+  .badge-font-md .badge-value { font-size: 36px; }
+  .badge-font-md .badge-sub { font-size: 20px; }
+
+  @media (max-width: 767px) {
+    .badge-font-mobile .badge-label { font-size: 15px; }
+    .badge-font-mobile .badge-value { font-size: 20px; }
+    .badge-font-mobile .badge-sub { font-size: 15px; }
+  }
+
+  /* Responsive adjustments for badges and tags */
+  @media (max-width: 1024px) {
+    .project-tag { min-width: 80px; height: 30px; font-size: 0.76rem; }
+    .payment-badges { left: 0.75rem; top: -2px; }
+    .payment-badge { width: 80px; height: 116px; transform: translateY(1px); }
+    .payment-badge .badge-value { font-size: 30px; }
+    .payment-badge .badge-label { font-size: 20px; }
+    .payment-badge .badge-sub { font-size: 20px; }
+  }
+
+  @media (max-width: 768px) {
+    .project-tag { min-width: 68px; height: 28px; font-size: 0.70rem; }
+    .payment-badges { left: 0.5rem; top: 0px; }
+    .payment-badge { width: 68px; height: 96px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; transform: translateY(0); }
+    .payment-badge .badge-value { font-size: 24px; }
+    .payment-badge .badge-label { font-size: 15px; }
+    .payment-badge .badge-sub { font-size: 15px; }
+  }
+
+  @media (max-width: 420px) {
+    .project-tag { min-width: 60px; height: 26px; font-size: 0.64rem; padding: 0 0.5rem; }
+    .payment-badges { left: 0.5rem; top: 4px; }
+    .payment-badge { width: 60px; height: 80px; transform: translateY(0); }
+    .payment-badge .badge-value { font-size: 18px; }
+    .payment-badge .badge-label { font-size: 11px; }
+    .payment-badge .badge-sub { font-size: 9px; }
   }
 }
 /* Footer specific styles */
