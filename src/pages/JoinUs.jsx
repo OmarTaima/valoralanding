@@ -12,12 +12,6 @@ const JoinUs = () => {
   const { t, isArabic, mapEmploymentType, mapWorkArrangement } = useTranslation();
   const { positions, loading, error } = useSelector((state) => state.jobPositions);
 
-  useEffect(() => {
-    if (positions.length === 0) {
-      dispatch(getJobPositions());
-    }
-  }, [dispatch, positions.length]);
-
   // Helper to get localized text
   const extractStringFromRich = (val) => {
     if (val == null) return '';
