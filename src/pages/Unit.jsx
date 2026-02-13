@@ -6,6 +6,7 @@ import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
 import { getAbsoluteImageUrl, getFullUrl, SITE_NAME } from "../utils/ogMeta";
+import { getEnSlug } from "../utils/slug";
 
 const Unit = () => {
   const { unitId } = useParams();
@@ -46,7 +47,6 @@ const Unit = () => {
     return String(type);
   };
 
-  import { getEnSlug } from "../utils/slug";
 
   useEffect(() => {
     // Dispatch Redux action to fetch projects (Redux will handle caching)
