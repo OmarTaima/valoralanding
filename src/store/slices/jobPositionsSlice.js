@@ -52,8 +52,7 @@ const jobPositionsSlice = createSlice({
       })
       .addCase(getJobPositions.fulfilled, (state, action) => {
         state.loading = false;
-        state.positions = action.payload.data?.jobs || [];
-        state.company = action.payload.data?.company || null;
+        state.positions = action.payload.data || [];
         state.error = null;
       })
       .addCase(getJobPositions.rejected, (state, action) => {
