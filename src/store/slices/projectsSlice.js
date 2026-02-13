@@ -7,7 +7,7 @@ export const getProjects = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_CRM_BACKEND_URL}/project/public`,
+        `${'https://sge-commerce.onrender.com/api/v1'}/project/public`,
         {
           params: {
             deleted: false,
