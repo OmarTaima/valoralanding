@@ -230,7 +230,16 @@ const ContactUs = () => {
 
     // Handle cascading location dropdowns
     if (name === "country") {
-      fetchGovernorates(value);
+      // Only fetch governorates when Egypt is selected; otherwise clear governorate/city
+      const selected = countries.find((c) => c._id === value);
+      const selName = (selected?.name || "").toString().trim().toLowerCase();
+      if (selName === "egypt" || selName === "مصر") {
+        fetchGovernorates(value);
+      } else {
+        setGovernorates([]);
+        setCities([]);
+        setFormData((prev) => ({ ...prev, government: "", city: "" }));
+      }
     } else if (name === "government") {
       // Filter cities based on selected government
       const filteredCities = allCities.filter((city) => {
@@ -558,16 +567,18 @@ const ContactUs = () => {
                       </select>
                       {errors.country && <p className="mt-2 text-sm text-danger-500">{errors.country}</p>}
                     </div>
-                    <div>
-                      <label htmlFor="government" className="form-label block mb-2">{t("contact:government") || "Governorate"} *</label>
-                      <select id="government" name="government" value={formData.government} onChange={handleChange} disabled={!formData.country} className={`${inputClass} ${errors.government ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                        <option value="">{t("contact:selectGovernment") || "Select a governorate"}</option>
-                        {governorates.map((g) => (
-                          <option key={g._id} value={g._id}>{g.name}</option>
-                        ))}
-                      </select>
-                      {errors.government && <p className="mt-2 text-sm text-danger-500">{errors.government}</p>}
-                    </div>
+                    {isEgyptSelected ? (
+                      <div>
+                        <label htmlFor="government" className="form-label block mb-2">{t("contact:government") || "Governorate"} *</label>
+                        <select id="government" name="government" value={formData.government} onChange={handleChange} disabled={!formData.country} className={`${inputClass} ${errors.government ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                          <option value="">{t("contact:selectGovernment") || "Select a governorate"}</option>
+                          {governorates.map((g) => (
+                            <option key={g._id} value={g._id}>{g.name}</option>
+                          ))}
+                        </select>
+                        {errors.government && <p className="mt-2 text-sm text-danger-500">{errors.government}</p>}
+                      </div>
+                    ) : null}
                   </div>
 
                   {isEgyptSelected && (
