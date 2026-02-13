@@ -81,7 +81,7 @@ const AboutSection = () => {
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="container relative mx-auto px-4 md:px-6">
+      <div className="container relative mx-auto px-8 sm:px-10 md:px-12 lg:px-0">
         {/* Tagline pill centered across container */}
         <div className="w-full mb-6 flex justify-center">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20">
@@ -94,7 +94,7 @@ const AboutSection = () => {
         </div>
 
         {/* Section Header */}
-        <div dir={isArabic ? "rtl" : "ltr"} className={`max-w-3xl mx-auto text-center mb-16`}>
+        <div dir={isArabic ? "rtl" : "ltr"} className={`max-w-prose mx-auto text-center mb-16 px-6 sm:px-8 md:px-10`}>
           <h2 className={`text-2xl md:text-3xl font-bold text-light-900 dark:text-white mb-6 `}>
             {t("about:title") || "Where Value Meets Aura"}
           </h2>
@@ -123,6 +123,7 @@ const AboutSection = () => {
                   />
                 </div>
                 <div className="text-center" dir={isArabic ? "rtl" : "ltr"}>
+                  <div className="max-w-prose mx-auto px-6 sm:px-8 md:px-10">
                   {
                     // Use two translation keys (brandMeaningDesc and brandMeaningDesc2)
                   }
@@ -156,7 +157,7 @@ const AboutSection = () => {
                                       {part1}
                                     </h3>
                                   ) : null}
-                                  
+                                  <h3 className="text-xl md:text-2xl font-bold text-primary-500 dark:text-white -mt-1 text-center sm:px-6"></h3>
                                 </>
                               );
                             }
@@ -173,8 +174,9 @@ const AboutSection = () => {
                       </>
                     );
                   })()}
+                  </div>
                   <div className="w-full flex flex-col md:flex-row items-center md:items-start">
-                    <div className={`text-light-600 dark:text-light-300 max-w-2xl space-y-4 pt-6 md:pt-10 transform ${isArabic ? "ml-auto text-right lg:translate-x-1" : "mr-auto text-left lg:translate-x-40"}`}>
+                    <div className={`text-light-600 dark:text-light-300 max-w-2xl px-4 sm:px-6 md:px-8 space-y-4 pt-6 md:pt-10 transform ${isArabic ? "ml-auto text-right lg:translate-x-1" : "mr-auto text-left lg:translate-x-40"}`}>
 
                       {/* Render each brand paragraph if present in locale */}
                       {(

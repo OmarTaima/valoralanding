@@ -54,6 +54,9 @@
   "paymentTerms": "Payment Terms",
   "virtualTour": "Take Virtual Tour",
 
+  "locatedAt": "is located at",
+  "currentPhase": "Current phase",
+
   "interested": "Interested in this Project?",
   "contactDesc": "Contact our sales team for more information, site visits, or personalized consultations.",
   "scheduleVisit": "Schedule Site Visit",

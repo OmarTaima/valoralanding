@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../i18n/hooks/useTranslation';
 import { getJobPositions } from '../store/slices/jobPositionsSlice';
 import { getFullUrl, getDefaultOgImage, SITE_NAME } from '../utils/ogMeta';
+import Footer from '../components/footer';
 
 const JoinUs = () => {
   const navigate = useNavigate();
@@ -57,8 +58,13 @@ const JoinUs = () => {
   const ogImage = getDefaultOgImage();
   
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
+    <>
+      <section style={{ fontFamily: "'Cairo', sans-serif" }} className="py-20 md:py-32 relative overflow-hidden min-h-screen">
       <Helmet>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap"
+        />
         <title>Join Us - VALORA</title>
         <meta name="description" content="Explore career opportunities at VALORA. Join our team and help shape the future of real estate in Egypt." />
         
@@ -321,7 +327,9 @@ const JoinUs = () => {
           </div>
         )}
       </div>
-    </section>
+      </section>
+      <Footer />
+    </>
   );
 };
 

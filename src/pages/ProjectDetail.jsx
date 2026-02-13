@@ -531,8 +531,8 @@ const ProjectDetail = () => {
             location: getProjectLocation(foundProject) || "Egypt",
             description: getLocalizedText(foundProject.locationDescription) || "",
             fullDescriptionParts: [
-              `${getLocalizedText(foundProject.name)} is located at ${getLocalizedText(foundProject.locationDescription)}`,
-              foundProject.currentPhase ? `Current phase: ${foundProject.currentPhase}` : null,
+              `${getLocalizedText(foundProject.name)} ${t('projectDetail:locatedAt') || 'is located at'} ${getLocalizedText(foundProject.locationDescription)}`,
+              foundProject.currentPhase ? `${t('projectDetail:currentPhase') || 'Current phase'}: ${getLocalizedText(foundProject.currentPhase)}` : null,
             ].filter(Boolean),
             images: [
               foundProject.mainImage,
@@ -874,13 +874,11 @@ const ProjectDetail = () => {
                   <div className="text-2xl font-bold text-white mb-1">
                     {t("projectDetail:sqm", { value: project.size || project.sizeNumber || "-" })}
                   </div>
-                  <div className="text-sm text-light-300">{t("projectDetail:unitSize") || "Unit Size"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">
                     {t("projectDetail:delivery", { value: project.completion })}
                   </div>
-                  <div className="text-sm text-light-300">{t("projectDetail:deliveryLabel") || "Delivery"}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="text-2xl font-bold text-white mb-1">

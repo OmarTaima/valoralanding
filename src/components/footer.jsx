@@ -100,7 +100,6 @@ const Footer = () => {
                       {t("footer:friSat") || "Friday & Saturday"}
                     </span>
                     <span className="text-light-300">
-                      {t("contact:weekend") || "By appointment"}
                     </span>
                   </div>
                 </div>

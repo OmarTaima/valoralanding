@@ -420,7 +420,7 @@ const ContactUs = () => {
   };
 
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
+    <section className="py-20 -mt-30 md:py-32 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
@@ -658,7 +658,7 @@ const ContactUs = () => {
           </div>
         </div>
 
-        <div className="glass rounded-3xl p-8 md:p-12">
+        {/* <div className="glass rounded-3xl p-8 md:p-12">
           <h3 className="text-3xl font-bold text-light-900 dark:text-white mb-8 text-center">{t("contact:faqTitle") || "Frequently Asked Questions"}</h3>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -690,7 +690,7 @@ const ContactUs = () => {
               </svg>
             </a>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

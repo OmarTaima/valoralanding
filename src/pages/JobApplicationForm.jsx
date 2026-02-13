@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n/hooks/useTranslation';
 import { getJobPositions } from '../store/slices/jobPositionsSlice';
 import valoraLogo from '../assets/logos/INSIDE LOGO.png';
 import { getFullUrl, getDefaultOgImage, SITE_NAME } from '../utils/ogMeta';
+import Footer from '../components/footer';
 
 const JobApplicationForm = () => {
   const { slug } = useParams();
@@ -445,6 +446,10 @@ const JobApplicationForm = () => {
   return (
     <>
       <Helmet>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap"
+        />
         <title>{jobPosition ? `Apply for ${jobTitle} - VALORA` : 'Job Application - VALORA'}</title>
         <meta name="description" content={jobPosition ? `Apply for the position of ${jobTitle} at VALORA.` : 'Submit your job application to join the VALORA team.'} />
         
@@ -472,7 +477,7 @@ const JobApplicationForm = () => {
         <meta name="twitter:description" content={jobPosition ? `Join VALORA as ${jobTitle}. Apply now!` : 'Submit your job application to join the VALORA team.'} />
         {ogImage && <meta name="twitter:image" content={ogImage} />}
       </Helmet>
-      <section className="py-20 md:py-32 relative overflow-hidden min-h-screen">
+      <section style={{ fontFamily: "'Cairo', sans-serif" }} className="py-20 md:py-32 relative overflow-hidden min-h-screen">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
@@ -842,7 +847,14 @@ const JobApplicationForm = () => {
                         )}
                       </div>
                       <p className="text-sm text-center mt-3 text-light-700 dark:text-light-300 group-hover:text-secondary-600 font-semibold transition-colors">
-                        {values.cvFile ? t('joinUs:changeCV') || 'Change CV' : t('joinUs:uploadCV') || 'Upload CV'}
+                        {values.cvFile ? (
+                          t('joinUs:changeCV') || 'Change CV'
+                        ) : (
+                          <>
+                            {t('joinUs:uploadCV') || 'Upload CV'}{' '}
+                            <span className="text-xs text-light-500 dark:text-light-400">({t('joinUs:optional') || (isArabic ? 'اختياري' : 'Optional')})</span>
+                          </>
+                        )}
                       </p>
                     </label>
                   </div>
@@ -1256,6 +1268,7 @@ const JobApplicationForm = () => {
           </Formik>
         </div>
       </section>
+      <Footer />
     </>
   );
 };
