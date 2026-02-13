@@ -381,7 +381,7 @@ const Footer = () => {
             <p className="text-light-500 text-xs">
               {isArabic ? (
                 <>
-                  ينشئ بواسطة&nbsp;
+                  تطوير&nbsp;
                   <a
                     href="https://www.sabergroup-eg.com"
                     target="_blank"

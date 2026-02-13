@@ -206,6 +206,21 @@ const ContactUs = () => {
     fetchProjects();
   }, []);
 
+  // Filter out unwanted country names from the selection
+  const filteredCountries = countries.filter((c) => {
+    const name = (c.name || "").toString().trim().toLowerCase();
+    return name !== "اونلاين" && name !== "غير محدد";
+  });
+
+  // Return true when the currently selected country is Egypt (مصر)
+  const isEgyptSelected = (() => {
+    if (!formData.country) return false;
+    const sel = countries.find((c) => c._id === formData.country);
+    if (!sel) return false;
+    const name = (sel.name || "").toString().trim().toLowerCase();
+    return name === "egypt" || name === "مصر";
+  })();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -537,7 +552,7 @@ const ContactUs = () => {
                       <label htmlFor="country" className="form-label block mb-2">{t("contact:country") || "Country"} *</label>
                       <select id="country" name="country" value={formData.country} onChange={handleChange} className={`${inputClass} ${errors.country ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""}`}>
                         <option value="">{t("contact:selectCountry") || "Select a country"}</option>
-                        {countries.map((c) => (
+                        {filteredCountries.map((c) => (
                           <option key={c._id} value={c._id}>{c.name}</option>
                         ))}
                       </select>
@@ -555,18 +570,20 @@ const ContactUs = () => {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="city" className="form-label block mb-2">{t("contact:city") || "City"} *</label>
-                      <select id="city" name="city" value={formData.city} onChange={handleChange} disabled={!formData.government} className={`${inputClass} ${errors.city ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                        <option value="">{t("contact:selectCity") || "Select a city"}</option>
-                        {cities.map((c) => (
-                          <option key={c._id} value={c._id}>{c.name}</option>
-                        ))}
-                      </select>
-                      {errors.city && <p className="mt-2 text-sm text-danger-500">{errors.city}</p>}
+                  {isEgyptSelected && (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="city" className="form-label block mb-2">{t("contact:city") || "City"} *</label>
+                        <select id="city" name="city" value={formData.city} onChange={handleChange} disabled={!formData.government} className={`${inputClass} ${errors.city ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                          <option value="">{t("contact:selectCity") || "Select a city"}</option>
+                          {cities.map((c) => (
+                            <option key={c._id} value={c._id}>{c.name}</option>
+                          ))}
+                        </select>
+                        {errors.city && <p className="mt-2 text-sm text-danger-500">{errors.city}</p>}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="mb-6">
                     <label htmlFor="phone" className="form-label block mb-2">{t("contact:phone") || "Phone Number"} *</label>

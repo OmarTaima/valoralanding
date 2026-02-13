@@ -46,6 +46,8 @@ const Unit = () => {
     return String(type);
   };
 
+  import { getEnSlug } from "../utils/slug";
+
   useEffect(() => {
     // Dispatch Redux action to fetch projects (Redux will handle caching)
     if (!unit) {
@@ -191,7 +193,7 @@ const Unit = () => {
       <div className="bg-white dark:bg-dark-800 border-b border-light-200 dark:border-dark-700">
         <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link to={projectSlug ? `/projects/${projectSlug}` : '/projects'} className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg shadow-md transition-colors">
+            <Link to={projectSlug ? `/projects/${(getEnSlug({ slug: projectSlug, _id: projectSlug, name: { en: projectName } }))}` : '/projects'} className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg shadow-md transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               {t('projectDetail:backToProject') || 'Back to Project'}
             </Link>

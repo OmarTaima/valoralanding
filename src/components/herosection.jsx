@@ -24,20 +24,19 @@ const HeroSection = () => {
         <div className="max-w-4xl">
           {/* Tagline */}
           <div className="mb-6">
-            <span className="inline-flex items-center px-4 py-2 rounded-full bg-primary-500/10 backdrop-blur-sm border border-primary-500/20">
-              <span className="w-2 h-2 rounded-full bg-primary-500 mr-2 animate-pulse" />
-              <span className="text-sm font-semibold text-primary-500 tracking-wide">
+            <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold shadow-sm bg-secondary-50 text-primary-500">
+              <span className="tracking-wide">
                 {t("home:premium") || "Premium Real Estate"}
               </span>
             </span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
             <span className="block text-white">
               {t("home:heroTitle") || "Live with Value"}
             </span>
-            <span className="block text-primary-500 mt-2">
+            <span className="block text-secondary-50 mt-2">
               {t("home:heroSubtitle") || "Where Every Space Tells a Story"}
             </span>
           </h1>

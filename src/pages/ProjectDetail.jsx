@@ -9,6 +9,7 @@ import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
 import { getAbsoluteImageUrl, getFullUrl, SITE_NAME } from "../utils/ogMeta";
+import { getEnSlug } from "../utils/slug";
 
 const ProjectDetail = () => {
   const { slug } = useParams();
@@ -336,6 +337,8 @@ const ProjectDetail = () => {
     return "";
   };
 
+  
+
   // Tabs for project details
   const tabs = [
     { id: "overview", label: t("projectDetail:overview") || "Overview" },
@@ -364,7 +367,8 @@ const ProjectDetail = () => {
 
     if (rawProjects && rawProjects.length > 0) {
       try {
-        const foundProject = rawProjects.find((p) => p.slug === slug);
+        const routeSlug = decodeURIComponent(slug || "");
+        let foundProject = rawProjects.find((p) => getEnSlug(p) === routeSlug || String(p._id) === routeSlug);
 
         if (foundProject) {
           // helpers to extract numeric area values and format
@@ -688,7 +692,10 @@ const ProjectDetail = () => {
   };
 
   const projectImageUrl = project?.images?.[0] ? getAbsoluteImageUrl(project.images[0]) : null;
-  const pageUrl = getFullUrl(`/projects/${project?.slug || slug}`);
+  const canonicalSlug = project
+    ? getEnSlug(project)
+    : decodeURIComponent(slug || "");
+  const pageUrl = getFullUrl(`/projects/${canonicalSlug}`);
 
   return (
     <div className="min-h-screen bg-light-50 dark:bg-dark-900">

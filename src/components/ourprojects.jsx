@@ -31,6 +31,7 @@ import steigenbergerLogo from "../assets/logos/Steigenberger.png";
 import tmgLogo from "../assets/logos/TMG.png";
 import zero31Logo from "../assets/logos/ZERO31.png";
 import { team } from "../data/team";
+import { getEnSlug } from "../utils/slug";
 
 const   OurProjects = () => {
   const { t, isArabic } = useTranslation();
@@ -127,6 +128,8 @@ const   OurProjects = () => {
     }
     return "";
   };
+
+  
 
   // Robust location extractor: check common fields where location might be stored
   const getProjectLocation = (proj) => {
@@ -642,8 +645,9 @@ const   OurProjects = () => {
 // Project Card Component
 const ProjectCard = ({ project, isArabic }) => {
   const { t } = useTranslation();
+  const linkSlug = getEnSlug({ slug: project.slug, _id: project.id, name: { en: project.title } , title: project.title });
   return (
-    <Link to={`/projects/${project.slug}`} className="block">
+    <Link to={`/projects/${linkSlug}`} className="block">
       <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-dark-800 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
         {/* Status Badge */}
         <div className="absolute top-4 left-4 z-20">
@@ -685,29 +689,47 @@ const ProjectCard = ({ project, isArabic }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 relative">
+        <div className="p-6 relative project-content">
           {/* Payment Badges */}
           {(project.depositPercent != null || project.numberOfInstallments != null) && (
-            <div className="payment-badges">
-              {project.depositPercent != null && (
-                <div className="payment-badge badge-font-md badge-font-mobile">
-                  <div className="badge-label">{isArabic ? "مقــدم" : "Deposit"}</div>
-                  <div className="badge-value">{project.depositPercent}%</div>
+            <div className={`badges-container  ${isArabic ? "badges--rtl" : "badges--ltr badges--en"}`}>
+              {/* Arabic badges */}
+              {isArabic && project.depositPercent != null && (
+                <div className="badge badge--ar badge--md badge--deposit">
+                  <div className="badge__label">مقــدم</div>
+                  <div className="badge__value">{project.depositPercent}%</div>
                 </div>
               )}
 
-              {project.numberOfInstallments != null && (
-                <div className="payment-badge badge-font-md badge-font-mobile">
-                  <div className="badge-label">{isArabic ? "تقسيط" : "Installment"}</div>
-                  <div className="badge-label">{isArabic ? "حتــــــــي" : "Installment"}</div>
-                  <div className="badge-sub">{project.numberOfInstallments} {isArabic ? `شهر` : `mo`}</div>
+              {isArabic && project.numberOfInstallments != null && (
+                <div className="badge badge--ar badge--md badge--installments">
+                  <div className="badge__label">تقسيط</div>
+                  <div className="badge__label">حتــــــــي</div>
+                  <div className="badge__sub">{project.numberOfInstallments} شهر</div>
                 </div>
               )}
+
+              {/* English badges (independent classes) */}
+              {!isArabic && project.numberOfInstallments != null && (
+                <div className="badge badge--en badge--md badge--installments">
+                  <div className="badge__label--up">UP TO</div>
+                  <div className="badge__value--en">{project.numberOfInstallments}</div>
+                  <div className="badge__sub--en">Month</div>
+                </div>
+              )}
+              {!isArabic && project.depositPercent != null && (
+                <div className="badge badge--en badge--md badge--deposit">
+                  <div className="badge__label--down">DOWN</div>
+                  <div className="badge__label--payment">Payment</div>
+                  <div className="badge__value--en">{project.depositPercent}%</div>
+                </div>
+              )}
+
             </div>
           )}
           
 {/* Category Tags */}
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-3 project-tags">
             {project.category.map((cat, index) => (
               <span
                 key={index}
@@ -718,11 +740,11 @@ const ProjectCard = ({ project, isArabic }) => {
             ))}
           </div>
           {/* Title & Location */}
-          <h3 className="text-xl font-bold text-primary-500 dark:text-white mb-2 group-hover:text-primary-500 transition-colors">
+          <h3 className="text-xl font-bold text-primary-500 dark:text-white mb-2 group-hover:text-primary-500 transition-colors project-title">
             {project.title}
           </h3>
 
-          <div className="flex items-center gap-2 text-light-600 dark:text-light-400 mb-4">
+          <div className="flex items-center gap-2 text-light-600 dark:text-light-400 mb-4 project-location">
             <svg
               className="w-4 h-4"
               fill="none"

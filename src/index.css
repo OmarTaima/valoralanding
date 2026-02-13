@@ -134,10 +134,18 @@
     line-height: 1;
   }
 
-  /* Payment badges used on project cards */
-  .payment-badges {
+  /* Badges refactor: clear, independent classes for readability
+     - container: .badges-container
+     - direction helpers: .badges--rtl / .badges--ltr
+     - badge base: .badge
+     - language modifiers: .badge--ar / .badge--en
+     - size modifiers: .badge--md / .badge--sm
+     - internal elements: .badge__label, .badge__value, .badge__sub
+  */
+
+  .badges-container {
     position: absolute;
-    top: -2px; /* nudged so badges barely touch the image above */
+    top: -2px;
     left: 1rem;
     z-index: 20;
     display: flex;
@@ -146,91 +154,177 @@
     pointer-events: none;
   }
 
-  .payment-badge {
+  .badges--rtl { left: 1rem; right: auto; flex-direction: row; }
+  .badges--ltr { right: 1rem; left: auto; flex-direction: row-reverse; }
+
+  .badge {
     background: #286a4e;
-    color: white;
-    width: 90px;
-    height: 130px; /* taller badge */
+    color: #fff;
+    width: 85px;
+    height: 130px;
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border-bottom-left-radius: 22px;
     border-bottom-right-radius: 22px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     font-family: 'Alexandria', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-    transform: translateY(2px); /* small nudge to reduce overlap */
+    transform: translateY(2px);
     pointer-events: auto;
+    text-align: center;
   }
 
-  .payment-badge .badge-deposit {
-    font-size: 23px;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-.payment-badge .badge-label  {
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  .payment-badge .badge-value {
-    font-size: 36px;
-    font-weight: 900;
-    line-height: 1;
-  }
+  /* language modifiers (keep open for per-language overrides) */
+  .badge--ar { /* Arabic-specific tweaks can go here */ }
+  .badge--en { /* English-specific tweaks can go here */ }
 
-  .payment-badge .badge-sub {
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1;
-    margin-top: 6px;
-  }
+  /* semantic element classes inside a badge */
+  .badge__label { font-size: 15px; font-weight: 900; line-height: 1; margin-bottom: 6px; display:block; width:100%; }
+  .badge__value { font-size: 36px; font-weight: 900; line-height: 1; }
+  .badge__sub { font-size: 22px; font-weight: 700; line-height: 1; margin-top: 6px; }
 
-  /* Utility classes to explicitly control badge font sizes per breakpoint
-     - add both classes to the badge element: .badge-font-md .badge-* and .badge-font-mobile .badge-*
-     media queries will ensure the correct sizes apply. */
-  .badge-font-md .badge-label { font-size: 20px; }
-  .badge-font-md .badge-value { font-size: 36px; }
-  .badge-font-md .badge-sub { font-size: 20px; }
+  /* size modifiers (desktop default) */
+  .badge--md .badge__label { font-size: 20px; }
+  .badge--md .badge__value { font-size: 36px; }
+  .badge--md .badge__sub { font-size: 22px; }
 
-  @media (max-width: 767px) {
-    .badge-font-mobile .badge-label { font-size: 15px; }
-    .badge-font-mobile .badge-value { font-size: 20px; }
-    .badge-font-mobile .badge-sub { font-size: 15px; }
-  }
+  .badge--sm { width: 68px; height: 96px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; transform: translateY(0); }
+  .badge--sm .badge__label { font-size: 13px; }
+  .badge--sm .badge__value { font-size: 24px; }
+  .badge--sm .badge__sub { font-size: 15px; }
 
-  /* Responsive adjustments for badges and tags */
-  @media (max-width: 1024px) {
-    .project-tag { min-width: 80px; height: 30px; font-size: 0.76rem; }
-    .payment-badges { left: 0.75rem; top: -2px; }
-    .payment-badge { width: 80px; height: 116px; transform: translateY(1px); }
-    .payment-badge .badge-value { font-size: 30px; }
-    .payment-badge .badge-label { font-size: 20px; }
-    .payment-badge .badge-sub { font-size: 20px; }
-  }
+  /* English label variants (independent, readable names) */
+  .badge__label--up { font-size: 25px; font-weight: 900; text-transform: uppercase; }
+  .badge__label--down {font-size: 20px; font-weight: 900; text-transform: uppercase; }
+  .badge__label--payment { font-size: 15px; font-weight: 900; }
+  .badge__value--en { font-size: 35px; font-weight: 900; }
+  .badge__sub--en { font-size: 12px; font-weight: 700; }
 
+  /* Mobile overrides: ensure Arabic gets smaller fonts at narrow widths
+     Use higher-specificity selectors when needed to override utilities. */
   @media (max-width: 768px) {
-    .project-tag { min-width: 68px; height: 28px; font-size: 0.70rem; }
-    .payment-badges { left: 0.5rem; top: 0px; }
-    .payment-badge { width: 68px; height: 96px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; transform: translateY(0); }
-    .payment-badge .badge-value { font-size: 24px; }
-    .payment-badge .badge-label { font-size: 15px; }
-    .payment-badge .badge-sub { font-size: 15px; }
+    /* Slight overlap so badges barely touch the image above */
+    .badges-container { left: 0.5rem; top: 5.75px; }
+    .badge { width: 68px; height: 96px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; transform: translateY(-6px); }
+    .badge__label { font-size: 13px; }
+    .badge__value { font-size: 24px; }
+    .badge__sub { font-size: 15px; }
+
+    /* Arabic-specific mobile reductions (higher specificity) */
+    .badge--ar.badge--sm .badge__value,
+    .badge--ar.badge--md .badge__value {
+      font-size: 25px;
+    }
+    .badge--ar.badge--sm .badge__label,
+    .badge--ar.badge--md .badge__label {
+      font-size: 17px;
+    }
+    .badge--ar.badge--sm .badge__sub,
+    .badge--ar.badge--md .badge__sub {
+      font-size: 17px;
+    }
   }
 
-  @media (max-width: 420px) {
-    .project-tag { min-width: 60px; height: 26px; font-size: 0.64rem; padding: 0 0.5rem; }
-    .payment-badges { left: 0.5rem; top: 4px; }
-    .payment-badge { width: 60px; height: 80px; transform: translateY(0); }
-    .payment-badge .badge-value { font-size: 18px; }
-    .payment-badge .badge-label { font-size: 11px; }
-    .payment-badge .badge-sub { font-size: 9px; }
+  /* Explicit responsive helpers for badge text elements (standalone selectors)
+     - Targets English label/value/sub helpers and label variants
+     - Independent selectors so they can be edited without parent dependency
+  */
+  @media (max-width: 2560px) {
+    .badge__label--up { font-size: 25px; margin-top: 4px }
+    .badge__label--down { font-size: 21px; }
+    .badge__label--payment { font-size: 15px; margin-top: -9px }
+    .badge__value--en { font-size: 33px; margin-bottom: 0; margin-top: -5px;}
+    .badge__sub--en { font-size: 14px; margin-top: -14px; }
   }
-}
+   @media (max-width: 1440px) {
+    .badge__label--up { font-size: 25px; margin-top: 2px }
+    .badge__label--down { font-size: 21px; }
+    .badge__label--payment { font-size: 17px; margin-top: -8px }
+    .badge__value--en { font-size: 33px; margin-bottom: 0; }
+    .badge__sub--en { font-size: 14px; margin-top: -14px; }
+  }
+  @media (max-width: 1024px) {
+    .badge__label--up { font-size: 25px; margin-top: 2px }
+    .badge__label--down { font-size: 21px; }
+    .badge__label--payment { font-size: 15.5px; margin-top: -11px }
+    .badge__value--en { font-size: 33px; margin-bottom: 0; }
+    .badge__sub--en { font-size: 14px; margin-top: -13px; }
+  }
+  @media (max-width: 768px) {
+    .badge__label--up { font-size: 19px; margin-top: 2px }
+    .badge__label--down { font-size: 16px; }
+    .badge__label--payment { font-size: 12px; margin-top: -8px }
+    .badge__value--en { font-size: 28px; margin-bottom: 0; }
+    .badge__sub--en { font-size: 11px; margin-top: -10px; }
+  }
+
+  @media (max-width: 425px) {
+    .badge__label--up { font-size: 20px;margin-top: 2px }
+    .badge__label--down { font-size: 18px; }
+    .badge__label--payment { font-size: 13px; margin-top: -9.5px; }
+    .badge__value--en { font-size: 23px; }
+    .badge__sub--en { font-size: 9px;margin-top: -10px }
+  }
+
+    /* Standalone editable badge classes (no parent dependency)
+      Use these directly on elements or in combination with `.badge`.
+      - Size groups: -lg / -md / -sm
+      - Language tweaks: .badge-ar-*, .badge-en-*
+      - Semantic parts: label, value, sub
+    */
+
+    /* Large / Desktop sizes */
+    .badge-label-lg { font-size: 20px; font-weight: 900; line-height:1; }
+    .badge-value-lg { font-size: 36px; font-weight: 900; line-height:1; }
+    .badge-sub-lg   { font-size: 22px; font-weight: 700; line-height:1; }
+
+    /* Medium sizes (default) */
+    .badge-label-md { font-size: 15px; font-weight: 900; line-height:1; }
+    .badge-value-md { font-size: 36px; font-weight: 900; line-height:1; }
+    .badge-sub-md   { font-size: 22px; font-weight: 700; line-height:1; }
+
+    /* Small / Mobile sizes */
+    .badge-label-sm { font-size: 13px; font-weight: 900; line-height:1; }
+    .badge-value-sm { font-size: 24px; font-weight: 900; line-height:1; }
+    .badge-sub-sm   { font-size: 15px; font-weight: 700; line-height:1; }
+
+    /* Arabic-specific small overrides (standalone) */
+    .badge-ar-label-sm { font-size: 9px !important; }
+    .badge-ar-value-sm { font-size: 18px !important; }
+    .badge-ar-sub-sm   { font-size: 10px !important; }
+
+    /* English label helpers (standalone) */
+    .badge-label-up   { font-weight: 900; text-transform: uppercase; }
+    .badge-label-down { font-weight: 900; text-transform: uppercase; }
+    .badge-label-payment { font-weight: 900; }
+
+    /* Convenience aliases for markup using BEM names in templates */
+    .badge__label--lg { font-size: 20px; font-weight: 900; line-height:1; }
+    .badge__value--lg { font-size: 36px; font-weight: 900; line-height:1; }
+    .badge__sub--lg   { font-size: 22px; font-weight: 700; line-height:1; }
+
+    .badge__label--md { font-size: 15px; font-weight: 900; line-height:1; }
+    .badge__value--md { font-size: 36px; font-weight: 900; line-height:1; }
+    .badge__sub--md   { font-size: 22px; font-weight: 700; line-height:1; }
+
+    .badge__label--sm { font-size: 13px; font-weight: 900; line-height:1; }
+    .badge__value--sm { font-size: 24px; font-weight: 900; line-height:1; }
+    .badge__sub--sm   { font-size: 15px; font-weight: 700; line-height:1; }
+
+
+
+  /* Mobile layout adjustments: ensure badges stay overlayed while
+     content is pushed down so title/address don't overlap badges. Also
+     stack project tags vertically on small screens. */
+  @media (max-width: 768px) {
+    .project-content { padding-top: 110px; }
+    .project-tags { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .project-title { margin-top: 0.5rem; }
+    .project-location { margin-top: 0.25rem; }
+  }
+
+  
 /* Footer specific styles */
 footer a {
   @apply transition-colors duration-300;
@@ -254,4 +348,5 @@ html {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
+}
 }
