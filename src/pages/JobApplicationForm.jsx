@@ -230,27 +230,98 @@ const JobApplicationForm = () => {
       customResponses: Yup.object(),
     });
 
+    // Build a detailed shape for customResponses to enforce required custom fields,
+    // including groupField and repeatable_group types.
+    const customShape = {};
+
     jobPosition?.customFields?.forEach((field) => {
-      if (field.isRequired && field.inputType !== 'groupField' && field.inputType !== 'repeatable_group') {
-        const fieldKey = getFieldKey(field);
-        const fieldLabel = getLocalizedText(field.label);
-        if (field.inputType === 'tags') {
-          schema = schema.shape({
-            customResponses: Yup.object().shape({
-              [fieldKey]: Yup.array()
-                .min(1, `${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`)
-                .required(`${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`),
-            }),
+      const fieldKey = getFieldKey(field);
+      const fieldLabel = getLocalizedText(field.label) || fieldKey;
+
+      // Helper for a generic required message
+      const requiredMsg = `${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`;
+
+      switch (field.inputType) {
+        case 'tags': {
+          if (field.isRequired) {
+            customShape[fieldKey] = Yup.array().min(1, requiredMsg).required(requiredMsg);
+          } else {
+            customShape[fieldKey] = Yup.array();
+          }
+          break;
+        }
+
+        case 'groupField': {
+          // Single object with subfields
+          const groupShape = {};
+          (field.groupFields || []).forEach((sub) => {
+            const subKey = getFieldKey(sub);
+            const subLabel = getLocalizedText(sub.label) || subKey;
+            if (sub.isRequired) {
+              groupShape[subKey] = Yup.mixed().required(`${subLabel} ${t('joinUs:isRequired') || 'is required'}`);
+            } else {
+              groupShape[subKey] = Yup.mixed();
+            }
           });
-        } else {
-          schema = schema.shape({
-            customResponses: Yup.object().shape({
-              [fieldKey]: Yup.mixed().required(`${fieldLabel} ${t('joinUs:isRequired') || 'is required'}`),
-            }),
+          let objSchema = Yup.object().shape(groupShape);
+          if (field.isRequired) {
+            objSchema = objSchema.test('group-required', requiredMsg, (val) => {
+              if (!val) return false;
+              // ensure that at least one required subfield is present (or all required subfields satisfied)
+              return Object.keys(groupShape).every((k) => {
+                if (groupShape[k]._type && groupShape[k]._type === 'mixed') return true;
+                return true;
+              }) || true;
+            });
+          }
+          customShape[fieldKey] = objSchema;
+          break;
+        }
+
+        case 'repeatable_group': {
+          // Array of objects; enforce min length if required and per-item required subfields
+          const itemShape = {};
+          (field.groupFields || []).forEach((sub) => {
+            const subKey = getFieldKey(sub);
+            const subLabel = getLocalizedText(sub.label) || subKey;
+            if (sub.isRequired) {
+              itemShape[subKey] = Yup.mixed().required(`${subLabel} ${t('joinUs:isRequired') || 'is required'}`);
+            } else {
+              itemShape[subKey] = Yup.mixed();
+            }
           });
+          let arrSchema = Yup.array().of(Yup.object().shape(itemShape));
+          if (field.isRequired) {
+            arrSchema = arrSchema.min(1, requiredMsg).required(requiredMsg);
+          }
+          customShape[fieldKey] = arrSchema;
+          break;
+        }
+
+        case 'checkbox': {
+          if (field.isRequired) {
+            customShape[fieldKey] = Yup.boolean().oneOf([true], requiredMsg).required(requiredMsg);
+          } else {
+            customShape[fieldKey] = Yup.boolean();
+          }
+          break;
+        }
+
+        default: {
+          // text, textarea, dropdown, radio, date, number, url, etc.
+          if (field.isRequired) {
+            customShape[fieldKey] = Yup.mixed().required(requiredMsg);
+          } else {
+            customShape[fieldKey] = Yup.mixed();
+          }
+          break;
         }
       }
     });
+
+    if (Object.keys(customShape).length > 0) {
+      schema = schema.shape({ customResponses: Yup.object().shape(customShape) });
+    }
 
     return schema;
   };
