@@ -176,7 +176,7 @@ const AboutSection = () => {
                   })()}
                   </div>
                   <div className="w-full flex flex-col md:flex-row items-center md:items-start">
-                    <div className={`text-light-600 dark:text-light-300 max-w-2xl px-4 sm:px-6 md:px-8 space-y-4 pt-6 md:pt-10 transform ${isArabic ? "ml-auto text-right lg:translate-x-1" : "mr-auto text-left lg:translate-x-40"}`}>
+                    <div className={`text-light-600 dark:text-light-300 max-w-2xl px-4 lg:-ml-55 sm:px-6 md:px-8 space-y-4 pt-6 md:pt-10 transform ${isArabic ? "ml-auto text-right lg:translate-x-1" : "mr-auto text-left lg:translate-x-40"}`}>
 
                       {/* Render each brand paragraph if present in locale */}
                       {(

@@ -9,7 +9,7 @@ import { useTranslation } from "../i18n/hooks/useTranslation";
 import { getProjects } from "../store/slices/projectsSlice";
 import Footer from "../components/footer";
 import { getAbsoluteImageUrl, getFullUrl, SITE_NAME } from "../utils/ogMeta";
-import { getEnSlug } from "../utils/slug";
+import { getEnSlug, slugify } from "../utils/slug";
 
 const ProjectDetail = () => {
   const { slug } = useParams();
@@ -367,8 +367,27 @@ const ProjectDetail = () => {
 
     if (rawProjects && rawProjects.length > 0) {
       try {
-        const routeSlug = decodeURIComponent(slug || "");
-        let foundProject = rawProjects.find((p) => getEnSlug(p) === routeSlug || String(p._id) === routeSlug);
+        const routeSlug = String(decodeURIComponent(slug || "")).toLowerCase();
+        const routeSlugRaw = String(slug || "");
+
+        const foundProject = rawProjects.find((p) => {
+          const id = String(p._id || "").toLowerCase();
+          const rawSlug = String(p.slug || "").toLowerCase();
+          const decodedSlug = String(decodeURIComponent(p.slug || "")).toLowerCase();
+          const enSlug = String(getEnSlug(p) || "").toLowerCase();
+          const nameSlug = String(slugify(getLocalizedText(p.name) || p.name?.en || p.title || "")).toLowerCase();
+
+          return (
+            id === routeSlug ||
+            rawSlug === routeSlug ||
+            decodedSlug === routeSlug ||
+            enSlug === routeSlug ||
+            nameSlug === routeSlug ||
+            id === routeSlugRaw ||
+            rawSlug === routeSlugRaw ||
+            enSlug === routeSlugRaw
+          );
+        });
 
         if (foundProject) {
           // helpers to extract numeric area values and format
@@ -447,8 +466,20 @@ const ProjectDetail = () => {
             }
           }
 
+          // helper to collect images/arrays while filtering inactive items
+          const collectActive = (...lists) =>
+            Array.from(
+              new Set(
+                [].concat(...lists.map((l) => (Array.isArray(l) ? l : []))).filter(Boolean).filter((it) => {
+                  if (it == null) return false;
+                  if (typeof it === 'object') return it.isActive !== false;
+                  return true;
+                })
+              )
+            );
+
           // normalize units list for display and provide fallbacks when fields are missing
-          const normalizedUnits = (foundProject.units || []).map((u) => {
+          const normalizedUnits = (foundProject.units || []).filter((u) => u == null ? false : (u.isActive !== false)).map((u) => {
             const unitAreaNum = extractNumber(u.area || u.size || u.area_m2 || u.squareMeter || u.square_meters);
 
             // try explicit numeric values first
@@ -494,8 +525,8 @@ const ProjectDetail = () => {
               unitTotalPriceNum,
               pricePerMeterDisplay: pricePerMeterNum ? `${parseInt(pricePerMeterNum).toLocaleString()}` : null,
               totalPriceDisplay: unitTotalPriceNum ? `${parseInt(unitTotalPriceNum).toLocaleString()}` : null,
-              planViewImages: u.planGallery || u.planViewImages || u.planView || u.currentImages || [],
-              features: u.features || [],
+              planViewImages: collectActive(u.planGallery, u.planViewImages, u.planView, u.currentImages),
+              features: (Array.isArray(u.features) ? u.features.filter((f) => f == null ? false : (typeof f === 'object' ? f.isActive !== false : true)) : []),
               availableUnitsNormalized: u.availableUnits || foundProject.availableUnits || null,
               payment: {
                 raw: paymentRaw,
@@ -1052,7 +1083,9 @@ const ProjectDetail = () => {
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-light-600 dark:text-light-400">{t("projectDetail:view") || "View"}:</span>
                               <span className="text-sm font-semibold text-light-900 dark:text-white">
-                                {unit.view}
+                                  {Array.isArray(unit.view)
+                                    ? unit.view.map((v) => getLocalizedText(v) || v).filter(Boolean).join(', ')
+                                    : getLocalizedText(unit.view) || unit.view || '-'}
                               </span>
                             </div>
                          

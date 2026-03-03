@@ -66,6 +66,22 @@ const JobApplicationForm = () => {
       .replace(/\s+/g, '_'); // Replace spaces with underscores
   };
 
+  // Helper to always derive the English key (use `en` label when present)
+  const getFieldKeyEn = (field) => {
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    // field may be the full field object; prefer its `label` object
+    const labelObj = field.label || field;
+    const enLabel = (typeof labelObj === 'object') ? (labelObj.en || labelObj.ar || field.name || field.fieldId || '') : '';
+    const labelText = extractStringFromRich(enLabel);
+    if (!labelText) return field.fieldId || '';
+    return labelText
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s\u0600-\u06FF]/g, '')
+      .replace(/\s+/g, '_');
+  };
+
   const extractStringFromRich = (val) => {
     if (val == null) return '';
     if (typeof val === 'string') return val;
@@ -224,11 +240,32 @@ const JobApplicationForm = () => {
         .matches(/^(\+\d{1,3}[- ]?)?\d{10,15}$/, t('joinUs:invalidPhone') || 'Invalid phone number')
         .required(`${t('joinUs:phone') || 'Phone'} ${t('joinUs:isRequired') || 'is required'}`),
       address: Yup.string().required(`${t('joinUs:address') || 'Address'} ${t('joinUs:isRequired') || 'is required'}`),
+      birthDate: Yup.date().nullable().required(`${t('joinUs:dateOfBirth') || 'Birth Date'} ${t('joinUs:isRequired') || 'is required'}`),
+      gender: Yup.string().required(`${t('joinUs:gender') || 'Gender'} ${t('joinUs:isRequired') || 'is required'}`),
       agreedToTerms: Yup.boolean()
         .oneOf([true], t('joinUs:acceptTerms') || 'You must accept the terms')
         .required(t('joinUs:acceptTerms') || 'You must accept the terms'),
       customResponses: Yup.object(),
     });
+
+    // If backend indicates the salary field should be visible, include it in validation (optional)
+    if (jobPosition?.salaryFieldVisible) {
+      const salaryRequiredMsg = `${t('joinUs:expectedSalary') || 'Expected Salary'} ${t('joinUs:isRequired') || 'is required'}`;
+      schema = schema.shape({
+        expectedSalary: Yup.string()
+          .required(salaryRequiredMsg)
+          .test(
+            'digits-only',
+            t('joinUs:invalidSalary') || 'Please enter a valid salary (numbers only)',
+            (val) => {
+              if (val === undefined || val === null) return true; // let required handle emptiness
+              const s = String(val).trim();
+              if (s === '') return true; // required will trigger instead
+              return /^\d+$/.test(s);
+            }
+          ),
+      });
+    }
 
     // Build a detailed shape for customResponses to enforce required custom fields,
     // including groupField and repeatable_group types.
@@ -267,11 +304,25 @@ const JobApplicationForm = () => {
           if (field.isRequired) {
             objSchema = objSchema.test('group-required', requiredMsg, (val) => {
               if (!val) return false;
-              // ensure that at least one required subfield is present (or all required subfields satisfied)
-              return Object.keys(groupShape).every((k) => {
-                if (groupShape[k]._type && groupShape[k]._type === 'mixed') return true;
+
+              // Collect required subfield keys from the original field definition
+              const requiredSubKeys = (field.groupFields || [])
+                .filter((s) => s.isRequired)
+                .map((s) => getFieldKey(s));
+
+              // If there are no required subfields, consider the group satisfied
+              if (requiredSubKeys.length === 0) return true;
+
+              // Ensure each required subfield has a meaningful value
+              return requiredSubKeys.every((k) => {
+                const v = val && Object.prototype.hasOwnProperty.call(val, k) ? val[k] : undefined;
+                if (v === undefined || v === null) return false;
+                if (typeof v === 'string') return v.trim() !== '';
+                if (Array.isArray(v)) return v.length > 0;
+                if (typeof v === 'object') return Object.keys(v).length > 0;
+                // for booleans/numbers/etc, accept non-null values
                 return true;
-              }) || true;
+              });
             });
           }
           customShape[fieldKey] = objSchema;
@@ -290,10 +341,45 @@ const JobApplicationForm = () => {
               itemShape[subKey] = Yup.mixed();
             }
           });
-          let arrSchema = Yup.array().of(Yup.object().shape(itemShape));
+          // Keep the per-item shape but allow empty objects; when the group is marked required,
+          // ensure at least one item has all required subfields filled.
+          const perItemSchema = Yup.object().shape(itemShape);
+          let arrSchema = Yup.array().of(perItemSchema);
+
           if (field.isRequired) {
-            arrSchema = arrSchema.min(1, requiredMsg).required(requiredMsg);
+            const requiredSubKeys = (field.groupFields || [])
+              .filter((s) => s.isRequired)
+              .map((s) => getFieldKey(s));
+
+            arrSchema = arrSchema.test('repeatable-required', requiredMsg, (arr) => {
+              // Also check the local repeatableGroups state (where the inputs write their values)
+              const external = repeatableGroups[fieldKey];
+
+              const checkArray = (a) => {
+                if (!a || !Array.isArray(a) || a.length === 0) return false;
+                if (requiredSubKeys.length === 0) return a.length > 0;
+                return a.some((item) => {
+                  return requiredSubKeys.every((k) => {
+                    const v = item && Object.prototype.hasOwnProperty.call(item, k) ? item[k] : undefined;
+                    if (v === undefined || v === null) return false;
+                    if (typeof v === 'string') return v.trim() !== '';
+                    if (Array.isArray(v)) return v.length > 0;
+                    if (typeof v === 'object') return Object.keys(v).length > 0;
+                    return true;
+                  });
+                });
+              };
+
+              // If formik value passes, good
+              if (checkArray(arr)) return true;
+
+              // Otherwise, check the external repeatableGroups state
+              if (checkArray(external)) return true;
+
+              return false;
+            });
           }
+
           customShape[fieldKey] = arrSchema;
           break;
         }
@@ -391,10 +477,103 @@ const JobApplicationForm = () => {
         Swal.close();
       }
 
+      // Convert customResponses values to English labels (always send `en`)
+      const englishCustomResponses = { ...finalCustomResponses };
+
+      jobPosition?.customFields?.forEach((field) => {
+        const fieldKey = getFieldKey(field);
+        if (!Object.prototype.hasOwnProperty.call(englishCustomResponses, fieldKey)) return;
+
+        const normalizeValue = (val, def) => {
+          if (val == null) return val;
+          if (Array.isArray(val)) return val.map((v) => normalizeValue(v, def));
+          if (typeof val === 'object') {
+            // group object or nested values
+            const out = {};
+            Object.keys(val).forEach((k) => {
+              const subDef = (def.groupFields || []).find((s) => getFieldKey(s) === k) || {};
+              out[k] = normalizeValue(val[k], subDef);
+            });
+            return out;
+          }
+
+          // Primitive value (string/number/boolean)
+          // If field defines choices, try to map selected label back to the English choice
+          if (def && Array.isArray(def.choices) && def.choices.length > 0) {
+            const match = def.choices.find((choice) => {
+              const en = extractStringFromRich(typeof choice === 'object' ? (choice.en || choice) : choice);
+              const ar = extractStringFromRich(typeof choice === 'object' ? (choice.ar || choice) : choice);
+              return String(en) === String(val) || String(ar) === String(val) || String(choice) === String(val);
+            });
+            if (match) {
+              return extractStringFromRich(typeof match === 'object' ? (match.en || match) : match);
+            }
+          }
+
+          return val;
+        };
+
+        englishCustomResponses[fieldKey] = normalizeValue(englishCustomResponses[fieldKey], field);
+      });
+
+      // Remap keys (and nested subkeys) to English-based keys
+      const remappedCustomResponses = {};
+      jobPosition?.customFields?.forEach((field) => {
+        const locKey = getFieldKey(field);
+        const enKey = getFieldKeyEn(field) || locKey;
+        if (!Object.prototype.hasOwnProperty.call(englishCustomResponses, locKey)) return;
+
+        const val = englishCustomResponses[locKey];
+
+        if (field.inputType === 'groupField' && val && typeof val === 'object' && !Array.isArray(val)) {
+          const mapped = {};
+          (field.groupFields || []).forEach((sub) => {
+            const subLoc = getFieldKey(sub);
+            const subEn = getFieldKeyEn(sub) || subLoc;
+            if (Object.prototype.hasOwnProperty.call(val, subLoc)) mapped[subEn] = val[subLoc];
+          });
+          remappedCustomResponses[enKey] = mapped;
+          return;
+        }
+
+        if (field.inputType === 'repeatable_group' && Array.isArray(val)) {
+          remappedCustomResponses[enKey] = val.map((item) => {
+            if (!item || typeof item !== 'object') return item;
+            const mappedItem = {};
+            (field.groupFields || []).forEach((sub) => {
+              const subLoc = getFieldKey(sub);
+              const subEn = getFieldKeyEn(sub) || subLoc;
+              if (Object.prototype.hasOwnProperty.call(item, subLoc)) mappedItem[subEn] = item[subLoc];
+            });
+            return mappedItem;
+          });
+          return;
+        }
+
+        // Default: primitive or array of primitives
+        remappedCustomResponses[enKey] = val;
+      });
+
+      // Include any leftover keys that weren't described in customFields as-is
+      const locKeySet = new Set((jobPosition?.customFields || []).map((f) => getFieldKey(f)));
+      Object.keys(englishCustomResponses).forEach((k) => {
+        // skip keys that were local keys handled above
+        if (locKeySet.has(k)) return;
+        remappedCustomResponses[k] = englishCustomResponses[k];
+      });
+
       // Use the base URL from env only
       const FORM_API_URL = import.meta.env.VITE_FORM_URL;
       if (!FORM_API_URL) {
         throw new Error('VITE_FORM_URL is not set in environment');
+      }
+
+      // Convert jobSpecsResponses object (specId: boolean) to array of { jobSpecId, answer }
+      const jobSpecsResponsesArray = [];
+      if (values.jobSpecsResponses && typeof values.jobSpecsResponses === 'object') {
+        Object.keys(values.jobSpecsResponses).forEach((specId) => {
+          jobSpecsResponsesArray.push({ jobSpecId: specId, answer: !!values.jobSpecsResponses[specId] });
+        });
       }
 
       // Send JSON payload with Cloudinary URLs
@@ -404,9 +583,13 @@ const JobApplicationForm = () => {
         email: values.email,
         phone: values.phone,
         address: values.address,
+        birthDate: values.birthDate,
+        gender: values.gender,
+        expectedSalary: values.expectedSalary || undefined,
         profilePhoto: profilePhotoUrl,
         cvFilePath: cvUrl,
-        customResponses: finalCustomResponses,
+        customResponses: Object.keys(remappedCustomResponses || {}).length ? remappedCustomResponses : englishCustomResponses,
+        jobSpecsResponses: jobSpecsResponsesArray.length ? jobSpecsResponsesArray : undefined,
       };
 
       
@@ -492,8 +675,16 @@ const JobApplicationForm = () => {
     email: '',
     phone: '',
     address: '',
+    birthDate: '',
+    gender: '',
+    expectedSalary: jobPosition?.salaryFieldVisible ? '' : undefined,
     profilePhotoFile: null,
     cvFile: null,
+    jobSpecsResponses: jobPosition?.jobSpecs?.reduce((acc, spec, i) => {
+      const specId = (spec && (spec._id || spec.id)) || `spec_${i}`;
+      acc[specId] = false;
+      return acc;
+    }, {}) || {},
     agreedToTerms: false,
     customResponses: jobPosition?.customFields?.reduce((acc, field) => {
       const fieldKey = getFieldKey(field);
@@ -642,25 +833,6 @@ const JobApplicationForm = () => {
               </p>
             </div>
           )}
-
-          {/* Job Specifications */}
-          {jobPosition.jobSpecs && jobPosition.jobSpecs.length > 0 && (
-            <div className="mb-8">
-              <div className="p-6 bg-light-50 dark:bg-dark-800 rounded-xl border-2 border-light-200 dark:border-dark-600">
-                <h3 className="font-bold text-lg text-light-800 dark:text-white mb-4">
-                  {t('joinUs:jobSpecs') || 'Job Specifications'}
-                </h3>
-                <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-                  {jobPosition.jobSpecs.map((spec, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className="shrink-0 w-5 h-5 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">{i + 1}</span>
-                      <span className="text-sm text-light-700 dark:text-light-300">{getLocalizedText(spec.spec || spec)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
           
           <Formik
             initialValues={initialValues}
@@ -718,6 +890,35 @@ const JobApplicationForm = () => {
                   <h2 className="text-2xl font-bold text-light-900 dark:text-white mb-6">
                     {t('joinUs:applicationForm') || 'Application Form'}
                   </h2>
+
+                  {jobPosition.jobSpecs && jobPosition.jobSpecs.length > 0 && (
+                    <div className="mb-6 p-6 bg-light-50 dark:bg-dark-800 rounded-xl border-2 border-light-200 dark:border-dark-600">
+                      <h3 className="font-bold text-lg text-light-800 dark:text-white mb-4">
+                        {t('joinUs:jobSpecs') || 'Job Specifications'}
+                      </h3>
+                      <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                        {jobPosition.jobSpecs.map((spec, i) => {
+                          const specId = (spec && (spec._id || spec.id)) || `spec_${i}`;
+                          return (
+                            <div key={specId} className="flex items-start gap-2">
+                              <span className="shrink-0 w-5 h-5 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">{i + 1}</span>
+                              <label className="flex items-center justify-between w-full gap-3 cursor-pointer">
+                                <span className={`flex-1 text-sm text-light-700 dark:text-light-300 ${isArabic ? 'text-right' : 'text-left'}`}>{getLocalizedText(spec.spec || spec)}</span>
+                                <div className="flex items-center ml-4">
+                                  <Field type="checkbox" name={`jobSpecsResponses.${specId}`} className="sr-only peer" />
+                                  <div className="w-7 h-7 rounded-lg bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 peer-checked:bg-primary-500 peer-focus:ring-4 peer-focus:ring-primary-500/30 transition-all duration-300 flex items-center justify-center peer-checked:[&>svg]:scale-100 shadow-md">
+                                    <svg className="w-4 h-4 text-white scale-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </div>
+                                </div>
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Profile Photo Upload - Circular */}
                   <div className="flex justify-center mb-8">
@@ -848,6 +1049,43 @@ const JobApplicationForm = () => {
                       )}
                     </div>
 
+                    {/* Expected Salary (visible only if backend enables salaryFieldVisible) */}
+                    {jobPosition?.salaryFieldVisible && (
+                      <div className="group">
+                        <label className="block text-sm font-semibold text-light-900 dark:text-white mb-2">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-3 0-5 2-5 5v3h10v-3c0-3-2-5-5-5z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4" />
+                            </svg>
+                            {t('joinUs:expectedSalary') || 'Expected Salary'}
+                          </div>
+                        </label>
+                        <input
+                          name="expectedSalary"
+                          inputMode="numeric"
+                          pattern="\d*"
+                          type="text"
+                          value={values.expectedSalary ?? ''}
+                          placeholder={t('joinUs:expectedSalaryPlaceholder') || t('joinUs:expectedSalary') || 'Expected Salary'}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D+/g, '');
+                            setFieldValue('expectedSalary', digits);
+                          }}
+                          onPaste={(e) => {
+                            e.preventDefault();
+                            const paste = (e.clipboardData || window.clipboardData).getData('text') || '';
+                            const digits = paste.replace(/\D+/g, '');
+                            setFieldValue('expectedSalary', digits);
+                          }}
+                          className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200"
+                        />
+                        {errors.expectedSalary && touched.expectedSalary && (
+                          <p className="mt-1 text-sm text-red-500">{errors.expectedSalary}</p>
+                        )}
+                      </div>
+                    )}
+
   
 
                     {/* Address */}
@@ -870,6 +1108,51 @@ const JobApplicationForm = () => {
                       />
                       {errors.address && touched.address && (
                         <p className="mt-1 text-sm text-red-500">{errors.address}</p>
+                      )}
+                    </div>
+
+                    {/* Birth Date */}
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-light-900 dark:text-white mb-2">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {t('joinUs:dateOfBirth') || 'Birth Date'} <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      </label>
+                      <Field
+                        name="birthDate"
+                        type="date"
+                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white placeholder-light-400 dark:placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200"
+                      />
+                      <p className="text-xs text-light-500 dark:text-light-400 mt-1">{isArabic ? 'dd/mm/yyyy' : 'mm/dd/yyyy'}</p>
+                      {errors.birthDate && touched.birthDate && (
+                        <p className="mt-1 text-sm text-red-500">{errors.birthDate}</p>
+                      )}
+                    </div>
+
+                    {/* Gender */}
+                    <div className="group">
+                      <label className="block text-sm font-semibold text-light-900 dark:text-white mb-2">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zM6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                          </svg>
+                          {t('joinUs:gender') || 'Gender'} <span className="text-red-500 ml-1">*</span>
+                        </div>
+                      </label>
+                      <Field
+                        as="select"
+                        name="gender"
+                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-dark-800 border-2 border-light-200 dark:border-dark-600 text-light-900 dark:text-white focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all duration-200 cursor-pointer"
+                      >
+                        <option value="">{t('contact:pleaseSelect') || 'Please select'}</option>
+                        <option value="Male">{t('joinUs:male') || 'Male'}</option>
+                        <option value="Female">{t('joinUs:female') || 'Female'}</option>
+                      </Field>
+                      {errors.gender && touched.gender && (
+                        <p className="mt-1 text-sm text-red-500">{errors.gender}</p>
                       )}
                     </div>
 

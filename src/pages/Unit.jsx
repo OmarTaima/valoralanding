@@ -34,6 +34,12 @@ const Unit = () => {
     return "";
   };
 
+  const renderView = (v) => {
+    if (!v) return '-';
+    if (Array.isArray(v)) return v.map((x) => getLocalizedText(x) || x).filter(Boolean).join(', ');
+    return getLocalizedText(v) || v;
+  };
+
   const getTypeLabel = (type) => {
     if (!type) return "";
     if (typeof type === "string") {
@@ -74,7 +80,19 @@ const Unit = () => {
           }
         }
         if (found) {
-          setUnit(found.unit);
+          // sanitize unit: filter out inactive nested fields and collect images
+          const filterActive = (arr) => (Array.isArray(arr) ? arr.filter((it) => (it == null ? false : (typeof it === 'object' ? it.isActive !== false : true))) : []);
+          const collectActive = (...lists) => Array.from(new Set([].concat(...lists.map((l) => (Array.isArray(l) ? l : []))).filter(Boolean).filter((it) => (it == null ? false : (typeof it === 'object' ? it.isActive !== false : true)))));
+
+          const sanitized = {
+            ...found.unit,
+            planViewImages: collectActive(found.unit.planViewImages, found.unit.planGallery, found.unit.planView),
+            currentImages: filterActive(found.unit.currentImages),
+            threeDImages: filterActive(found.unit.threeDImages),
+            features: filterActive(found.unit.features),
+          };
+
+          setUnit(sanitized);
           setProjectSlug(found.project?.slug || "");
           setProjectName(getLocalizedText(found.project?.name) || "");
           setShowPrices(found.project?.showPrices ?? true);
@@ -262,7 +280,7 @@ const Unit = () => {
 
                   <div>
                     <div className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:view') || 'View'}</div>
-                    <div className="font-semibold text-light-900 dark:text-white">{unit.view || '-'}</div>
+                    <div className="font-semibold text-light-900 dark:text-white">{renderView(unit.view)}</div>
                   </div>
 
                   <div>
@@ -341,7 +359,7 @@ const Unit = () => {
                 <div className="flex justify-between py-2 border-b border-light-200 dark:border-dark-700"><span className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:floor') || 'Floor'}</span><span className="font-semibold text-light-900 dark:text-white">{unit.floor || '-'}</span></div>
                 <div className="flex justify-between py-2 border-b border-light-200 dark:border-dark-700"><span className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:area') || 'Area'}</span><span className="font-semibold text-light-900 dark:text-white">{area} {t('projectDetail:sqm') || 'm²'}</span></div>
                 <div className="flex justify-between py-2 border-b border-light-200 dark:border-dark-700"><span className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:available') || 'Available'}</span><span className="font-semibold text-success-500">{unit.availableUnits || '-'}</span></div>
-                <div className="flex justify-between py-2"><span className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:view') || 'View'}</span><span className="font-semibold text-light-900 dark:text-white">{unit.view || '-'}</span></div>
+                <div className="flex justify-between py-2"><span className="text-sm text-light-600 dark:text-light-400">{t('projectDetail:view') || 'View'}</span><span className="font-semibold text-light-900 dark:text-white">{renderView(unit.view)}</span></div>
               </div>
             </div>
 

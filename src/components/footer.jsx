@@ -374,38 +374,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Created By Section */}
-        <div className="border-t border-dark-800 py-4">
-          <div className="text-center">
-            <p className="text-light-500 text-xs">
-              {isArabic ? (
-                <>
-                  تطوير&nbsp;
-                  <a
-                    href="https://www.sabergroup-eg.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-500 hover:underline"
-                  >
-                    SABERGROUPSTUDIOS ©
-                  </a>
-                </>
-              ) : (
-                <>
-                  Created by&nbsp;
-                  <a
-                    href="https://www.sabergroup-eg.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-500 hover:underline"
-                  >
-                    SABERGROUPSTUDIOS ©
-                  </a>
-                </>
-              )}
-            </p>
-          </div>
-        </div>
+        
       </div>
     </footer>
   );
